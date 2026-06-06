@@ -170,13 +170,27 @@ export interface DeviceStatus {
   deviceName: string | null;
   cacheRoot: string;
   lastPullAt: number | null;
+  lastBackupAt?: number | null;
+  presetCount?: number;
+  sampleCount?: number;
   error?: string | null;
+}
+
+export interface BackupEntry {
+  id: string;
+  path: string;
+  createdAt: string;
+  presetCount: number;
+  sampleCount: number;
 }
 
 export interface OpxyApi {
   device: {
     status(): Promise<DeviceStatus>;
     pull(): Promise<{ ok: boolean; error?: string; presetCount?: number; sampleCount?: number }>;
+    backup(): Promise<{ ok: boolean; path?: string; presetCount?: number; sampleCount?: number; error?: string }>;
+    listBackups(): Promise<BackupEntry[]>;
+    showBackup(backupPath: string): Promise<void>;
     cacheRoot(): Promise<string>;
     listPresets(): Promise<CachePresetEntry[]>;
     readText(relativePath: string): Promise<string>;

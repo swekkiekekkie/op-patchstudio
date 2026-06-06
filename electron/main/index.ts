@@ -1,10 +1,12 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { createBackup, listBackups } from './backup';
 import { countCacheEntries, mtpPull, mtpStatus } from './mtp';
 import { listPresets, readBytes, readText } from './cache';
 
 let lastPullAt: number | null = null;
+let lastBackupAt: number | null = null;
 
 function cacheRoot(): string {
   return path.join(app.getPath('userData'), 'device-cache');
@@ -45,11 +47,16 @@ function createWindow(): void {
 app.whenReady().then(() => {
   ipcMain.handle('device:status', () => {
     const mtp = mtpStatus();
+    const root = cacheRoot();
+    const counts = fs.existsSync(root) ? countCacheEntries(root) : { presetCount: 0, sampleCount: 0 };
     return {
       connected: mtp.connected,
       deviceName: mtp.deviceName ?? null,
-      cacheRoot: cacheRoot(),
+      cacheRoot: root,
       lastPullAt,
+      lastBackupAt,
+      presetCount: counts.presetCount,
+      sampleCount: counts.sampleCount,
       error: mtp.error ?? null,
     };
   });
@@ -84,6 +91,19 @@ app.whenReady().then(() => {
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
+  });
+
+  ipcMain.handle('device:backup', () => {
+    const root = cacheRoot();
+    const result = createBackup(root, lastPullAt);
+    if (result.ok) lastBackupAt = Date.now();
+    return result;
+  });
+
+  ipcMain.handle('device:listBackups', () => listBackups());
+
+  ipcMain.handle('device:showBackup', (_e, backupPath: string) => {
+    shell.showItemInFolder(backupPath);
   });
 
   createWindow();

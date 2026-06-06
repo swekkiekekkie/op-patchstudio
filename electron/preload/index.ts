@@ -10,5 +10,8 @@ contextBridge.exposeInMainWorld('opxy', {
     readBytes: (relativePath: string) => ipcRenderer.invoke('cache:readBytes', relativePath),
     exportPresetZip: (presetName: string, zipBase64: string) =>
       ipcRenderer.invoke('cache:exportPresetZip', presetName, zipBase64),
+    backup: () => ipcRenderer.invoke('device:backup'),
+    listBackups: () => ipcRenderer.invoke('device:listBackups'),
+    showBackup: (backupPath: string) => ipcRenderer.invoke('device:showBackup', backupPath),
   },
 });
