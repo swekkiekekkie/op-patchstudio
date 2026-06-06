@@ -1,6 +1,29 @@
 import { useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { generateDrumPatch, generateMultisamplePatch, downloadBlob } from '../utils/patchGeneration';
+import { generateDrumPatch, generateMultisamplePatch } from '../utils/patchGeneration';
+
+async function exportPresetZip(blob: Blob, presetName: string): Promise<void> {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  const base64 = btoa(binary);
+
+  if (window.opxy?.device?.exportPresetZip) {
+    const result = await window.opxy.device.exportPresetZip(presetName, base64);
+    if (!result.ok) throw new Error(result.error ?? 'Export failed');
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${presetName}.preset.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export function usePatchGeneration() {
   const { state, dispatch } = useAppContext();
@@ -10,36 +33,28 @@ export function usePatchGeneration() {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      const loadedSamples = state.drumSamples.filter(sample => sample.isLoaded);
-      if (loadedSamples.length === 0) {
-        throw new Error('No samples loaded');
-      }
+      const loadedSamples = state.drumSamples.filter((sample) => sample.isLoaded);
+      if (loadedSamples.length === 0) throw new Error('No samples loaded');
 
       const finalPatchName = patchName || state.drumSettings.presetName || `drum_patch_${Date.now()}`;
-      
-      // Get audio format settings from drum settings
       const targetSampleRate = state.drumSettings.sampleRate || undefined;
       const targetBitDepth = state.drumSettings.bitDepth || undefined;
-      const targetChannels = state.drumSettings.channels === 1 ? "mono" : "keep";
-      
+      const targetChannels = state.drumSettings.channels === 1 ? 'mono' : 'keep';
+
       const patchBlob = await generateDrumPatch(
-        state, 
+        state,
         finalPatchName,
         targetSampleRate,
         targetBitDepth,
         targetChannels,
-        state.drumSettings.audioFormat
+        state.drumSettings.audioFormat,
       );
-      
-      downloadBlob(patchBlob, `${finalPatchName}.preset.zip`);
-      
-      // Show success message (could be enhanced with a proper notification system)
-      
+
+      await exportPresetZip(patchBlob, finalPatchName);
     } catch (error) {
-      console.error('Error generating drum patch:', error);
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: error instanceof Error ? error.message : 'Failed to generate patch' 
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to generate patch',
       });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -51,45 +66,34 @@ export function usePatchGeneration() {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      if (state.multisampleFiles.length === 0) {
-        throw new Error('No samples loaded');
-      }
+      if (state.multisampleFiles.length === 0) throw new Error('No samples loaded');
 
       const finalPatchName = patchName || state.multisampleSettings.presetName || `multisample_patch_${Date.now()}`;
-      
-      // Get audio format settings from multisample settings
       const targetSampleRate = state.multisampleSettings.sampleRate || undefined;
       const targetBitDepth = state.multisampleSettings.bitDepth || undefined;
-      const targetChannels = state.multisampleSettings.channels === 1 ? "mono" : "keep";
-      const multisampleGain = state.multisampleSettings.gain || 0; // Get gain from UI settings
-      
+      const targetChannels = state.multisampleSettings.channels === 1 ? 'mono' : 'keep';
+      const multisampleGain = state.multisampleSettings.gain || 0;
+
       const patchBlob = await generateMultisamplePatch(
-        state, 
+        state,
         finalPatchName,
         targetSampleRate,
         targetBitDepth,
         targetChannels,
         multisampleGain,
-        state.multisampleSettings.audioFormat
+        state.multisampleSettings.audioFormat,
       );
-      
-      downloadBlob(patchBlob, `${finalPatchName}.preset.zip`);
-      
-      // Show success message
-      
+
+      await exportPresetZip(patchBlob, finalPatchName);
     } catch (error) {
-      console.error('Error generating multisample patch:', error);
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: error instanceof Error ? error.message : 'Failed to generate patch' 
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to generate patch',
       });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, [state, dispatch]);
 
-  return {
-    generateDrumPatchFile,
-    generateMultisamplePatchFile,
-  };
+  return { generateDrumPatchFile, generateMultisamplePatchFile };
 }

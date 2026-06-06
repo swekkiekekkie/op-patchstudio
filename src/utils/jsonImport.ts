@@ -87,7 +87,7 @@ export function importMultisamplePresetJson(
   try {
     const importedJson: ImportedPresetJson = JSON.parse(jsonContent);
     
-    if (importedJson.type !== 'multisampler') {
+    if (importedJson.type !== 'sampler' && importedJson.type !== 'multisampler') {
       throw new Error('Invalid preset type: expected multisample preset');
     }
 
@@ -151,7 +151,7 @@ export function validatePresetJson(jsonContent: string): { isValid: boolean; typ
       return { isValid: false, error: 'Missing preset type' };
     }
     
-    if (json.type !== 'drum' && json.type !== 'multisampler') {
+    if (json.type !== 'drum' && json.type !== 'sampler' && json.type !== 'multisampler') {
       return { isValid: false, error: `Unsupported preset type: ${json.type}` };
     }
     

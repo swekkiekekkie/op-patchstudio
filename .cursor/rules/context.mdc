@@ -1,8 +1,0 @@
----
-description: info on managing state
-globs: ["**/*.ts", "**/*.tsx", "**/*.scss"]
-alwaysApply: true
----
-- global state lives exclusively in `AppContext` (React context + reducer) – do not introduce other global state libraries (redux, recoil, zustand, etc.)
-- interact with global state via `useAppContext()` and dispatch predefined action types in `AppContext.tsx`
-- for transient ui state (modals, tooltips) use local `useState` in the component

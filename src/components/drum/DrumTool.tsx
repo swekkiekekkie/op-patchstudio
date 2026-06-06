@@ -13,8 +13,6 @@ import { usePatchGeneration } from '../../hooks/usePatchGeneration';
 import { audioBufferToWav } from '../../utils/wavExport';
 import { readAudioMetadata } from '../../utils/audioFormats';
 import { DrumKeyboardContainer } from './DrumKeyboardContainer';
-import { savePresetToLibrary } from '../../utils/libraryUtils';
-import { sessionStorageIndexedDB } from '../../utils/sessionStorageIndexedDB';
 import { saveDrumSettingsAsDefault } from '../../utils/defaultSettings';
 import { parseOP1DrumPreset, isOP1DrumPreset } from '../../utils/op1DrumPresetParser';
 import { AUDIO_CONSTANTS } from '../../utils/constants';
@@ -238,47 +236,7 @@ export function DrumTool() {
 
 
 
-  const handleSaveToLibrary = async () => {
-    try {
-      const result = await savePresetToLibrary(state, state.drumSettings.presetName, 'drum');
-      if (result.success) {
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: {
-            id: Date.now().toString(),
-            type: 'success',
-            title: 'preset saved',
-            message: `"${state.drumSettings.presetName}" saved to library`
-          }
-        });
-        // Trigger library refresh event
-        window.dispatchEvent(new CustomEvent('library-refresh'));
-      } else {
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: {
-            id: Date.now().toString(),
-            type: 'error',
-            title: 'save failed',
-            message: result.error || 'failed to save preset to library'
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error saving to library:', error);
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: {
-          id: Date.now().toString(),
-          type: 'error',
-          title: 'save failed',
-          message: 'failed to save preset to library'
-        }
-      });
-    }
-  };
-
-  const handleDownloadPreset = async () => {
+  const handleExportPreset = async () => {
     try {
       const patchName = state.drumSettings.presetName.trim() || 'drum_patch';
       await generateDrumPatchFile(patchName);
@@ -320,8 +278,6 @@ export function DrumTool() {
       onConfirm: async () => {
         // Clear all samples and reset to 24 slots
         dispatch({ type: 'CLEAR_ALL_DRUM_SAMPLES' });
-        // Reset saved to library flag since we're starting fresh
-        await sessionStorageIndexedDB.resetSavedToLibraryFlag();
         setConfirmDialog({ isOpen: false, message: '', onConfirm: async () => {} });
       }
     });
@@ -357,9 +313,6 @@ export function DrumTool() {
         dispatch({ type: 'SET_DRUM_PRESET_VELOCITY', payload: 20 });
         dispatch({ type: 'SET_DRUM_PRESET_VOLUME', payload: 69 });
         dispatch({ type: 'SET_DRUM_PRESET_WIDTH', payload: 0 });
-        
-        // Reset saved to library flag since we're starting fresh
-        await sessionStorageIndexedDB.resetSavedToLibraryFlag();
         
         setConfirmDialog({ isOpen: false, message: '', onConfirm: async () => {} });
       }
@@ -752,8 +705,7 @@ export function DrumTool() {
           onPresetNameChange={handlePresetNameChange}
           hasChangesFromDefaults={hasChangesFromDefaults}
           onResetAll={handleResetAll}
-          onSaveToLibrary={handleSaveToLibrary}
-          onDownloadPreset={handleDownloadPreset}
+          onExportPreset={handleExportPreset}
           onSaveSettingsAsDefault={handleSaveSettingsAsDefault}
           inputId="preset-name"
           renameFiles={state.drumSettings.renameFiles}

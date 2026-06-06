@@ -12,9 +12,7 @@ import { useFileUpload } from '../../hooks/useFileUpload';
 import { usePatchGeneration } from '../../hooks/usePatchGeneration';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
 import { audioBufferToWav } from '../../utils/wavExport';
-import { cookieUtils, COOKIE_KEYS } from '../../utils/cookies';
-import { savePresetToLibrary } from '../../utils/libraryUtils';
-import { sessionStorageIndexedDB } from '../../utils/sessionStorageIndexedDB';
+import { localStore, STORE_KEYS } from '../../utils/localStore';
 import { ToggleSwitch } from '../common/ToggleSwitch';
 import { saveMultisampleSettingsAsDefault } from '../../utils/defaultSettings';
 import { AUDIO_CONSTANTS } from '../../utils/constants';
@@ -51,12 +49,12 @@ export function MultisampleTool() {
     dispatch({ type: 'TOGGLE_MULTISAMPLE_KEYBOARD_PIN' });
   }, [dispatch]);
   
-  // Effect to save pin state to cookies
+  // Persist pin state
   useEffect(() => {
     try {
-      cookieUtils.setCookie(COOKIE_KEYS.MULTISAMPLE_KEYBOARD_PINNED, String(isMultisampleKeyboardPinned));
+      localStore.set(STORE_KEYS.MULTISAMPLE_KEYBOARD_PINNED, String(isMultisampleKeyboardPinned));
     } catch (error) {
-      console.warn('Failed to save multisample keyboard pin state to cookie:', error);
+      console.warn('Failed to save multisample keyboard pin state:', error);
     }
   }, [isMultisampleKeyboardPinned]);
 
@@ -206,47 +204,7 @@ export function MultisampleTool() {
 
 
 
-  const handleSaveToLibrary = async () => {
-    try {
-      const result = await savePresetToLibrary(state, state.multisampleSettings.presetName, 'multisample');
-      if (result.success) {
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: {
-            id: Date.now().toString(),
-            type: 'success',
-            title: 'preset saved',
-            message: `"${state.multisampleSettings.presetName}" saved to library`
-          }
-        });
-        // Trigger library refresh event
-        window.dispatchEvent(new CustomEvent('library-refresh'));
-      } else {
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: {
-            id: Date.now().toString(),
-            type: 'error',
-            title: 'save failed',
-            message: result.error || 'failed to save preset to library'
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error saving to library:', error);
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: {
-          id: Date.now().toString(),
-          type: 'error',
-          title: 'save failed',
-          message: 'failed to save preset to library'
-        }
-      });
-    }
-  };
-
-  const handleDownloadPreset = async () => {
+  const handleExportPreset = async () => {
     try {
       const patchName = state.multisampleSettings.presetName.trim() || 'multisample_patch';
       await generateMultisamplePatchFile(patchName);
@@ -289,8 +247,6 @@ export function MultisampleTool() {
         for (let i = state.multisampleFiles.length - 1; i >= 0; i--) {
           clearMultisampleFile(i);
         }
-        // Reset saved to library flag since we're starting fresh
-        await sessionStorageIndexedDB.resetSavedToLibraryFlag();
         setConfirmDialog({ isOpen: false, message: '', onConfirm: async () => {} });
       }
     });
@@ -325,9 +281,6 @@ export function MultisampleTool() {
         // Reset file renaming settings to defaults
         dispatch({ type: 'SET_MULTISAMPLE_RENAME_FILES', payload: false });
         dispatch({ type: 'SET_MULTISAMPLE_FILENAME_SEPARATOR', payload: ' ' });
-        
-        // Reset saved to library flag since we're starting fresh
-        await sessionStorageIndexedDB.resetSavedToLibraryFlag();
         
         setConfirmDialog({ isOpen: false, message: '', onConfirm: async () => {} });
       }
@@ -776,8 +729,7 @@ export function MultisampleTool() {
           onPresetNameChange={handlePresetNameChange}
           hasChangesFromDefaults={hasChangesFromDefaults}
           onResetAll={handleResetAll}
-          onSaveToLibrary={handleSaveToLibrary}
-          onDownloadPreset={handleDownloadPreset}
+          onExportPreset={handleExportPreset}
           onSaveSettingsAsDefault={handleSaveSettingsAsDefault}
           inputId="preset-name-multi"
           renameFiles={state.multisampleSettings.renameFiles}

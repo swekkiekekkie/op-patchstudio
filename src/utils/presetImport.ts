@@ -38,6 +38,10 @@ export interface ImportResult {
   error?: string;
 }
 
+function isMultisamplePresetType(type: string): boolean {
+  return type === 'multisampler' || type === 'sampler';
+}
+
 export function validatePresetJson(jsonData: any, expectedType: 'drum' | 'multisampler'): ImportResult {
   try {
     // Check if it's a valid object
@@ -56,23 +60,26 @@ export function validatePresetJson(jsonData: any, expectedType: 'drum' | 'multis
       };
     }
 
-    // Validate type matches expected
-    if (jsonData.type !== expectedType) {
+    const typeMatches =
+      expectedType === 'drum'
+        ? jsonData.type === 'drum'
+        : isMultisamplePresetType(jsonData.type);
+
+    if (!typeMatches) {
       let message = '';
-      
-      if (expectedType === 'drum' && jsonData.type === 'multisampler') {
+
+      if (expectedType === 'drum' && isMultisamplePresetType(jsonData.type)) {
         message = 'This is a multisample preset, but you\'re trying to import it into the drum tool. Please switch to the multisample tab to import this preset.';
       } else if (expectedType === 'multisampler' && jsonData.type === 'drum') {
         message = 'This is a drum preset, but you\'re trying to import it into the multisample tool. Please switch to the drum tab to import this preset.';
       } else {
-        // Fallback for unknown types
-        const actualType = jsonData.type === 'drum' ? 'drum' : 
-                          jsonData.type === 'multisampler' ? 'multisampler' : 
+        const actualType = jsonData.type === 'drum' ? 'drum' :
+                          isMultisamplePresetType(jsonData.type) ? 'multisampler' :
                           jsonData.type;
         const expectedTypeName = expectedType === 'drum' ? 'drum' : 'multisampler';
         message = `This preset file has type "${actualType}" but we expected a "${expectedTypeName}" preset. Please make sure you're using the correct preset file.`;
       }
-      
+
       return {
         success: false,
         error: message
@@ -114,7 +121,7 @@ export async function importPresetFromFile(file: File, expectedType: 'drum' | 'm
 
     // Read file content
     const text = await file.text();
-    
+
     // Parse JSON
     let jsonData: any;
     try {
@@ -145,7 +152,7 @@ export function internalToPercent(internal: number): number {
 // Extract settings from imported preset for UI
 export function extractDrumSettings(preset: DrumPresetJson) {
   const engine = preset.engine;
-  
+
   return {
     presetSettings: {
       playmode: engine.playmode || 'poly',
@@ -159,4 +166,4 @@ export function extractDrumSettings(preset: DrumPresetJson) {
 
 // Note: Multisample presets don't have exposed UI settings like drums
 // The engine settings are used during patch generation but not exposed in UI
-// The imported preset is stored in context for use during patch generation 
+// The imported preset is stored in context for use during patch generation

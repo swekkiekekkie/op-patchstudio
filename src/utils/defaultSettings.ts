@@ -1,4 +1,4 @@
-import { cookieUtils, COOKIE_KEYS } from './cookies';
+import { localStore, STORE_KEYS } from './localStore';
 import { AUDIO_CONSTANTS } from './constants';
 import type { AppState } from '../context/AppContext';
 
@@ -99,7 +99,7 @@ export function saveDrumSettingsAsDefault(settings: AppState['drumSettings'], im
       importedPreset: importedPreset
     };
     
-    cookieUtils.setCookie(COOKIE_KEYS.DRUM_DEFAULT_SETTINGS, JSON.stringify(settingsToSave), 365);
+    localStore.set(STORE_KEYS.DRUM_DEFAULT_SETTINGS, JSON.stringify(settingsToSave));
   } catch (error) {
     console.warn('Failed to save drum default settings:', error);
   }
@@ -140,7 +140,7 @@ export function saveMultisampleSettingsAsDefault(settings: AppState['multisample
       importedPreset: importedPreset
     };
     
-    cookieUtils.setCookie(COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS, JSON.stringify(settingsToSave), 365);
+    localStore.set(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS, JSON.stringify(settingsToSave));
   } catch (error) {
     console.warn('Failed to save multisample default settings:', error);
   }
@@ -149,7 +149,7 @@ export function saveMultisampleSettingsAsDefault(settings: AppState['multisample
 // Load drum default settings
 export function loadDrumDefaultSettings(): typeof defaultDrumSettings {
   try {
-    const savedSettings = cookieUtils.getCookie(COOKIE_KEYS.DRUM_DEFAULT_SETTINGS);
+    const savedSettings = localStore.get(STORE_KEYS.DRUM_DEFAULT_SETTINGS);
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
       
@@ -177,7 +177,7 @@ export function loadDrumDefaultSettings(): typeof defaultDrumSettings {
 // Load multisample default settings
 export function loadMultisampleDefaultSettings(): typeof defaultMultisampleSettings {
   try {
-    const savedSettings = cookieUtils.getCookie(COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
+    const savedSettings = localStore.get(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
       
@@ -233,7 +233,7 @@ export function loadMultisampleDefaultSettings(): typeof defaultMultisampleSetti
 // Load drum imported preset data
 export function loadDrumImportedPreset(): any | null {
   try {
-    const savedSettings = cookieUtils.getCookie(COOKIE_KEYS.DRUM_DEFAULT_SETTINGS);
+    const savedSettings = localStore.get(STORE_KEYS.DRUM_DEFAULT_SETTINGS);
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
       return parsed.importedPreset || null;
@@ -247,7 +247,7 @@ export function loadDrumImportedPreset(): any | null {
 // Load multisample imported preset data
 export function loadMultisampleImportedPreset(): any | null {
   try {
-    const savedSettings = cookieUtils.getCookie(COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
+    const savedSettings = localStore.get(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
       return parsed.importedPreset || null;
@@ -260,18 +260,18 @@ export function loadMultisampleImportedPreset(): any | null {
 
 // Check if custom default settings exist
 export function hasCustomDrumDefaults(): boolean {
-  return cookieUtils.getCookie(COOKIE_KEYS.DRUM_DEFAULT_SETTINGS) !== null;
+  return localStore.get(STORE_KEYS.DRUM_DEFAULT_SETTINGS) !== null;
 }
 
 export function hasCustomMultisampleDefaults(): boolean {
-  return cookieUtils.getCookie(COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS) !== null;
+  return localStore.get(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS) !== null;
 }
 
 // Clear default settings
 export function clearDrumDefaults(): void {
-  cookieUtils.removeCookie(COOKIE_KEYS.DRUM_DEFAULT_SETTINGS);
+  localStore.remove(STORE_KEYS.DRUM_DEFAULT_SETTINGS);
 }
 
 export function clearMultisampleDefaults(): void {
-  cookieUtils.removeCookie(COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
+  localStore.remove(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
 } 

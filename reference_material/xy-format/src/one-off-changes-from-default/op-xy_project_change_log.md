@@ -1,0 +1,207 @@
+# OP-XY Project File Change Log
+
+This document lists all changes made to OP-XY project files relative to their default state.
+
+## Baseline Reference
+- **unnamed_1** — Blank baseline project
+
+## Project settings 
+
+### Tempo, Groove, and Metronome
+- **unnamed_4** — Changed tempo to 40 BPM (minimum)
+- **unnamed_5** — Set tempo to 121.2 BPM
+- **unnamed_10** — Muted tempo click track by setting its volume to minimum
+- **unnamed_11** — Set tempo groove type to 'dis-funk'
+- **unnamed_12** — Set groove type configuration to 'bombora'
+- **unnamed_42** — Set groove type configuration to 'half-shuffle'
+- **unnamed_44** — Set groove type configuration to 'danish'
+- **unnamed_45** — Set groove type configuration to 'wobbly'
+- **unnamed_46** — Set groove type configuration to 'gaussian'
+- **unnamed_47** — Set groove type configuration to 'prophetic'
+- **unnamed_48** — set groove amount low
+- **unnamed_49** — set groove amount high
+
+### MIDI
+- **unnamed_41** — sets project settings for track 1 to be midi channel 1, track 16 to be channel 16, other tracks left off
+- **unnamed_54** — set track three to MIDI channel eight (first track-only mapping capture)
+
+
+## Sequencer Notes, Length, and Scales
+- **unnamed_2** — Added a note trig on step one of track one, set to middle C
+- **unnamed_3** — Recorded a C-E-G triad on step one
+- **unnamed_6** — Entered song mode and created a new blank pattern
+- **unnamed_7** — Added three blank patterns on track one
+- **unnamed_8** — Added pulse step component on track one, pattern one, step one, to repeat once
+- **unnamed_9** — Set pulse step component to highest setting for random repeats
+- **unnamed_17** — Set track one, pattern one to two bars
+- **unnamed_18** — Set number of bars to three
+- **unnamed_19** — Set number of bars to four
+- **unnamed_20** — Changed track scale to 'track scale 2'
+- **unnamed_21** — Changed track scale to 9 ('track scale 16')
+- **unnamed_22** — Changed track scale to 0 ('track scale 1/2')
+- **unnamed_38** — track 4 step 1 triggers lowest possible note, step 2 triggers highest possible note
+- **unnamed_39** — a single note is played on track 3 pattern 1 with pitch bend wobble applied
+- **unnamed_50** — hand entered C4 note trig on track 3, step 6 with custom velocity, duration from record mode
+- **unnamed_51** — starting from unnamed_50.xy, turn off the trig on step 6 using the sequencer, perhaps leaving example ring residue behind
+- **unnamed_56** — Track three, pattern one trig on step nine stretched to cover two steps (long gate)
+- **unnamed_57** — Same project, track three trig extended further to four steps
+- **unnamed_59** — Added pulse step component on track one, pattern one, step nine at minimum configuration value
+- **unnamed_60** — Set the pulse step component on track one, pattern one, step nine to its maximum configuration value
+- **unnamed_61** — Added hold step component on track one, pattern one, step nine at minimum configuration value
+- **unnamed_62** — Added trigger step component on track one, pattern one, step nine configured to fire every fourth trig
+- **unnamed_63** — Enabled all available step components on track one, pattern one, step nine with default configuration values
+- **unnamed_66** — Multiply step component on track one, pattern one, step nine dividing the step into four trigs
+- **unnamed_67** — Velocity step component on track one, pattern one, step nine set to random
+- **unnamed_68** — Ramp Up step component on track one, pattern one, step nine spanning four steps and three octaves
+- **unnamed_69** — Ramp Down step component on track one, pattern one, step nine spanning three steps and one octave
+- **unnamed_70** — Random step component on track one, pattern one, step nine spanning four steps with a one-octave range
+- **unnamed_71** — Portamento step component on track one, pattern one, step nine set to 70 %
+- **unnamed_72** — Bend step component on track one, pattern one, step nine using the up/down shape
+- **unnamed_73** — Tonality step component on track one, pattern one, step nine shifting pitch up a fifth
+- **unnamed_74** — Jump step component on track one, pattern one, step nine targeting step thirteen
+- **unnamed_75** — Parameter component on track one, pattern one, step nine with the first four parameter toggles enabled
+- **unnamed_76** — Conditional component on track one, pattern one, step nine firing every second trig
+- **unnamed_77** — Conditional component on track one, pattern one, step nine firing every ninth trig
+- **unnamed_78** — Added a quantised note trig and Multiply component (divide into two trigs) on track three, pattern one, step nine
+- **unnamed_79** — Hand-entered, non-quantized note on track three landing on step thirteen with a micro-late offset
+- **unnamed_81** — Added a single grid-quantised C4 trig on track one, pattern one, step nine (default velocity/gate; no other edits)
+- **unnamed_80** — Added grid-entered notes on track one, pattern one: single C4 at step one, single D4 at step five, single E4 at step nine, and a stacked F4–G4–A4 chord at step thirteen
+- **unnamed_85** — Track three switched to the Wavetable engine and, via step edit (no recording), a single C4 trig was placed on pattern one step nine with default velocity/gate
+- **unnamed_86** — Same Wavetable setup as unnamed_85, but captured in real-time record: a live-played C4 trig lands near step eight and sustains across multiple steps
+- **unnamed_87** — Live-recorded single C4 on track three (Prism) landing around step ten with a short hold (~0.7 step) while leaving all other tracks untouched
+- **unnamed_91** — Track four engine changed from Pluck to Drum, single hit placed on step one (note 83, velocity 100). Uses 0x2d grid event type. No preamble 0x64 sentinel on track five (unlike note-only edits)
+- **unnamed_92** — Three notes on track three with different gate lengths: step 1 (2 steps), step 5 (4 steps), step 11 (6 steps). Uses 0x21 sequential event with explicit gate encoding
+- **unnamed_93** — MIDI harness capture: single C4 (note 60) on step 1 sent via MIDI to all 8 instrument tracks simultaneously. All 8 tracks activated (type 05→07). Reveals engine-dependent event types: T1(Drum)=0x25, T2(Drum)=0x21, T3(Prism)=0x21, T4(EPiano)=0x1F, T5(Dissolve)=0x21, T6(Hardsync)=0x1E, T7(Axis)=0x20, T8(Multisampler)=0x20. Gate recorded as explicit 480 ticks. Preamble 0x64 set on T2-T4, T6-T9 (T5 keeps original 0x2E — reason unknown)
+- **unnamed_94** — MIDI harness capture (`selective_multi_note`): non-contiguous tracks with engine changes. T3 changed from Prism to Wavetable, T5 changed from Dissolve to Drum (empty sampler). MIDI sent via `tools/midi_harness.py` to channels 1/3/5/7: T1(ch1, Drum default) C4 step 1 + D4 step 5; T3(ch3, Wavetable) C4+E4+G4 chord step 1; T5(ch5, Drum) C4 step 1 velocity 50; T7(ch7, Axis default) E4 step 9 with 4-step hold. Tests: multi-note 0x25, MIDI chord serialization, 0x2D vs engine, velocity fidelity, non-contiguous preamble behavior, tick/gate encoding
+
+
+## Songs and Arrangement
+- **unnamed_13** — Created an empty Song 2 in song mode
+- **unnamed_149** — Song-mode capture: Song 2 initialized/selected, empty arrangement, loop off
+- **unnamed_150** — Song-mode control: default empty situation (Song 1 only), loop off
+- **unnamed_151** — Song-mode capture: Song 3 created/selected, empty arrangement, loop off
+- **unnamed_152** — Scene-mode capture: Scene 2 initialized (default content), no notes or mix edits
+- **unnamed_154** — Combined scene/song capture (`05`): Song 2 initialized/selected and Scene 2 initialized, loop off
+- **unnamed_155** — Looping capture (`07`): Song 2 with three scenes in the song arrangement, loop left on
+- **unnamed_150b** — Mute probe from `unnamed_150`: Scene 1 with Track 1 muted
+- **unnamed_152b** — Mute probe from `unnamed_152`: Scene 2 with Track 1 muted
+- **unnamed_154b** — Mute probe from `unnamed_154`: Scene 2 with Tracks 1 and 8 muted
+- **unnamed_155b** — Mute probe from `unnamed_155`: Song 2 (3 scenes) mute map set as S1=`T1`, S2=`T8`, S3=`T1+T8`
+- **unnamed_150_nl** — Loop probe from `unnamed_150`: user reports Song 1 loop was on in `150`; this capture flips Song 1 loop off
+- **unnamed_150_lp** — Loop probe from `unnamed_150_nl`: Song 1 loop flipped back on
+- **unnamed_151_nl** — Loop probe from `unnamed_151`: Song 3 loop flipped on (user-confirmed intent)
+- **unnamed_151_lp** — Loop probe from `unnamed_151_nl`: Song 3 loop flipped back off
+- **unnamed_154_loop** — Loop probe from `unnamed_154`: Song 2 loop flipped on
+- **unnamed_154_nl** — Loop probe from `unnamed_154_loop`: Song 2 loop flipped back off
+
+## Mix and Master Adjustments
+- **unnamed_14** — Turned EQ leftmost setting (low range) to zero
+- **unnamed_16** — Turned rightmost EQ setting (high-end) to zero
+- **unnamed_15** — Created a new empty song for mid-range
+
+## Track Sound Design Parameters
+- **unnamed_34** — Changed track 1 to have axis synth with no preset from engine picker
+- **unnamed_23** — Set parameter one on track three from 15 to 99
+- **unnamed_24** — Set parameter one on track three to zero
+- **unnamed_25** — Set parameter four from 22 to 99
+- **unnamed_26** — Adjusted M2 page on track three: amp attack ↑, decay ↑, sustain ↑, release ↓
+- **unnamed_27** — Maxed filter envelope on M2: attack, decay, sustain, release
+- **unnamed_28** — Changed filter type on M3 page from SVF to Ladder
+- **unnamed_29** — Turned off filter on M3 page
+- **unnamed_30** — Maxed out all filter knobs (cutoff, resonance, key tracking) on M3
+- **unnamed_31** — Turned on M4 page on track three
+- **unnamed_32** — Switched M4 LFO from tremolo to duck
+- **unnamed_33** — Maxed rate, vibrato, volume, envelope, and shape on M4
+- **unnamed_35** — synth parameter 1 of track 3 has been automated to adjust throughout the 16 steps
+- **unnamed_36** — fx1 changed to chorus
+- **unnamed_37** — fx2 changed to phaser
+- **unnamed_40** — set the high pass filter on track 1 to a max value of 100
+- **unnamed_50** — hand entered C4 note trig on track 3, step 6 with custom velocity, duration from record mode
+- **unnamed_51** — starting from unnamed_50.xy, turned off the trig on step 6 using the sequencer
+- **unnamed_52** — enabled a single note trig on track 1
+- **unnamed_53** — starting from unnamed_52.xy, removed the step 1 trig on track 1
+- **unnamed_65** — Added quantised note trigs on step 9 for track 3 (Prism synth) and track 8 (Multisampler)
+- **unnamed_82** — Set track 1 high pass filter to value 1 and reduced velocity sensitivity to 0
+- **unnamed_83** — Remapped track 1 modulation routings: modwheel→synth2 (-50), aftertouch→LFO4 (+50), pitchbend→ADSR1 (+25), velocity→filter3 (-25)
+- **unnamed_84** — Rerouted track 1 pitch bend target from synth1 to filter3 (other mod routings left at defaults)
+- **unnamed_95** — MIDI harness capture (`cc_cutoff_steps`): Track 3 (ch 3, Prism), single C4 note on step 1 + CC32 (filter cutoff) automation at 4 steps: step 1=0, step 5=42, step 9=85, step 13=127. **CAUTION: post-roll=1 caused 2-bar playback over a 1-bar pattern — the pattern looped once, second pass may have overwritten first-pass CC automation with static final values. See unnamed 100 for corrected version.**
+- **unnamed_96** — MIDI harness capture (`cc_only_no_notes`): Track 3 (ch 3, Prism), CC32 (filter cutoff)=127 at step 1, NO notes. Tests whether CC-only automation is recorded without a note event anchor. **CAUTION: same post-roll loop issue as unnamed 95 — CC was only at step 1 so loop impact is minimal (parameter already at final value).**
+- **unnamed_97** — MIDI harness capture (`cc_multi_lane`): Track 3 (ch 3, Prism), single C4 note on step 1 + three different CCs all at value 64: CC12 (Param 1) at step 1, CC32 (cutoff) at step 5, CC33 (resonance) at step 9. **CAUTION: same post-roll loop issue — second pass had all 3 CCs at their final values (64), may have flattened any per-step automation.**
+- **unnamed_98** — MIDI harness capture (`cc_amp_envelope`): Track 3 (ch 3, Prism), single C4 note on step 1 + all 4 amp envelope CCs at step 1: CC20 (attack)=100, CC21 (decay)=80, CC22 (sustain)=60, CC23 (release)=40. **CAUTION: same post-roll loop issue — all CCs at step 1 so second pass replayed with same static values, loop impact likely minimal.**
+- **unnamed_99** — MIDI harness capture (`cc_volume_pan`): Track 3 (ch 3, Prism), single C4 note on step 1 + CC7 (volume)=100 at step 1, CC10 (pan)=0 at step 5, CC10 (pan)=127 at step 9. **CAUTION: same post-roll loop issue — second pass had volume=100 and pan=127 as static final values.**
+- **unnamed_100** — MIDI harness capture (`cc_cutoff_steps` corrected): Track 3 (ch 3, Prism), single C4 note on step 1 + CC32 (filter cutoff) at steps 1/5/9/13 with values 0/42/85/127. **Fixed: post-roll=0, exactly 1 bar (96 clocks, 16 steps), no pattern loop.** Definitive test of whether MIDI CCs record per-step automation
+- **unnamed_101** — MIDI harness capture (`4bar_drums_bass`): First multi-bar test. T1 (ch1, Drum) 4-bar groove with kick/snare/hats (bars 1-3 steady, bar 4 snare fill) + T3 (ch3, Prism) 4-bar bass line in C minor with varied gate lengths (C2-G2). Both tracks extended to 4 bars on device before recording. 64 total note-ons, 120 BPM, post-roll=0.
+- **unnamed_102** — Multi-pattern test: Track 1 has pattern 2 added. Single note trig placed on pattern 2, step 9 only (pattern 1 left empty). First capture with note data in a non-default pattern slot.
+- **unnamed_103** — Multi-pattern test: Track 1 has 2 patterns with notes in both. Pattern 1: C note on step 1. Pattern 2: E note on step 9. Different pitches and steps for easy binary identification.
+- **unnamed_104** — Multi-pattern sparsity test: Track 1 has 3 patterns. Pattern 1: note on step 1. Pattern 2: blank. Pattern 3: note on step 9. Tests whether empty pattern slots occupy space or are skipped.
+- **unnamed_105** — Multi-track multi-pattern test: Pattern 2 added to both Track 1 and Track 3. T1 pattern 2: note trig on step 1. T3 pattern 2: note trig on step 2. Tests per-track pattern independence and how rotation works with multiple tracks having extra patterns.
+- **unnamed_105b** — Follow-up to `unnamed_105`: added a single note trig on **Track 3, Pattern 1** (while keeping the existing Track 3 Pattern 2 trig). This is the first capture where a non-T1 leader pattern in a multi-track multi-pattern project contains note data.
+- **unnamed_106** — MIDI harness capture (`modwheel_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + modwheel (CC1) ramp from 0→127 over 16 steps. Tests whether modwheel is recorded as keyframe automation (like pitchbend in unnamed 39) or ignored (like arbitrary CCs in unnamed 95-100). Post-roll=0, 1 bar, 120 BPM.
+- **unnamed_107** — MIDI harness capture (`aftertouch_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + channel aftertouch (pressure) ramp from 0→127 over 16 steps. Tests whether aftertouch is recorded as keyframe automation. Post-roll=0, 1 bar, 120 BPM.
+- **unnamed_108** — MIDI harness capture (`pitchbend_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + pitch bend ramp from center (8192) to max (16383) over 16 steps. Complement to unnamed 39 (hand-played wobble) with known linear ramp values. Post-roll=0, 1 bar, 120 BPM.
+- **unnamed_109** — MIDI harness capture (`perf_all_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + simultaneous modwheel (CC1) 0→127 + channel aftertouch 0→127 + pitch bend center→max ramps over 16 steps. Kitchen sink test: all three performance controllers at once. Post-roll=0, 1 bar, 120 BPM.
+- **p01_t4_touch_noevent** (device exported as `unnamed 111.xy`) — Fresh project. Track 4 selected, one parameter nudged (single click), no note trigs entered. Capture for "touched/active-without-event" behavior.
+- **p02_t4_note_event** (device exported as `unnamed 112.xy`) — Fresh project. Track 4 selected with default preset, single note trig entered on step 1 (C4), no other edits. Capture for "note event present" control.
+- **p03_t4_preset_note** (device exported as `unnamed 113.xy`) — Fresh project. Track 4 preset changed, then single note trig entered on step 1 (C4), no other edits. Capture for preset-branch vs default-preset note behavior.
+- **p04_desc_t2_2pat_blank** (device exported as `unnamed 114.xy`) — Descriptor topology capture: Track 2 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=01`, descriptor@`0x58` = `00 00 1c 01 00 00`.
+- **p05_desc_t2t3_2pat_blank** (device exported as `unnamed 115.xy`) — Descriptor topology capture: Tracks 2 and 3 expanded to 2 patterns each (A+B), all four patterns blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=01`, descriptor@`0x58` = `01 00 00 00 1b 01 00 00`.
+- **p06_desc_t1t7_2pat_blank** (device exported as `unnamed 116.xy`) — Descriptor topology capture: Tracks 1 and 7 expanded to 2 patterns each (A+B), all four patterns blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=01`, `v57=00`, descriptor@`0x58` = `00 03 01 00 00 17 01 00 00`.
+- **p07_desc_t1p2_t3p3_blank** (source import: `src/unnamed 117.xy`) — Mixed-count descriptor topology capture: Track 1 expanded to 2 patterns (A+B), Track 3 expanded to 3 patterns (A+B+C), all five patterns blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=01`, `v57=00`, descriptor@`0x58` = `02 00 00 1b 01 00 00`.
+- **p08_desc_t3p2_p1note_s1** (source import: `src/unnamed 118.xy`, distinct from legacy `unnamed_118` step-component specimen) — Track 3 expanded to 2 patterns (A+B); Pattern 1 has one note trig at step 1 (`note=48`, `velocity=100`, default gate), Pattern 2 is blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `00 01 00 00 1b 01 00 00`.
+- **p09_mp_t1t3_p3_t1p2_t3p1_s1** (source import: `src/unnamed 119.xy`, distinct from legacy `unnamed_119` step-component specimen) — Track 1 and Track 3 each expanded to 3 patterns (A+B+C). Note placement: T1 Pattern 2 step 1 (`note=60`, `velocity=100`), T3 Pattern 1 step 1 (`note=48`, `velocity=100`); all other T1/T3 patterns blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=01`, `v57=00`, descriptor@`0x58` = `00 1d 01 00 00`.
+- **p10_mp_t1t3_p4_t1p2_t3p1_s1** (source import: `src/unnamed 120.xy`, distinct from legacy `unnamed_120` MIDI hold-record specimen) — Track 1 and Track 3 each expanded to 4 patterns (A+B+C+D). Note placement is identical to p09: T1 Pattern 2 step 1 (`note=60`, `velocity=100`), T3 Pattern 1 step 1 (`note=48`, `velocity=100`); all other T1/T3 patterns blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=01`, `v57=00`, descriptor@`0x58` = `00 1d 01 00 00`.
+- **01_t1_p2_blank** (device exported as `unnamed 121.xy`) — Fresh project. Track 1 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=01`, `v57=00`, descriptor@`0x58` = `00 1d 01 00 00`.
+- **02_t2_p2_blank** (device exported as `unnamed 122.xy`) — Fresh project. Track 2 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=01`, descriptor@`0x58` = `00 00 1c 01 00 00`.
+- **03_t3_p2_blank** (device exported as `unnamed 123.xy`) — Fresh project. Track 3 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `00 01 00 00 1b 01 00 00`.
+- **04_t4_p2_blank** (device exported as `unnamed 124.xy`) — Fresh project. Track 4 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `01 01 00 00 1a 01 00 00`.
+- **05_t5_p2_blank** (device exported as `unnamed 125.xy`) — Fresh project. Track 5 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `02 01 00 00 19 01 00 00`.
+- **06_t6_p2_blank** (device exported as `unnamed 126.xy`) — Fresh project. Track 6 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `03 01 00 00 18 01 00 00`.
+- **07_t7_p2_blank** (device exported as `unnamed 127.xy`) — Fresh project. Track 7 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `04 01 00 00 17 01 00 00`.
+- **08_t8_p2_blank** (device exported as `unnamed 128.xy`) — Fresh project. Track 8 expanded to 2 patterns (A+B), both blank; all other tracks remain single-pattern blank. No note events. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `05 01 00 00 16 01 00 00`.
+- **r01_t2_p2_p1note_s1** (device exported as `unnamed 129.xy`) — Fresh project. Track 2 expanded to 2 patterns (A+B). Pattern 1 has one note trig at step 1 (`note=60`, `velocity=100`, default gate); Pattern 2 is blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `1e 01 00 00` (short-form branch).
+- **r02_t2_p2_p2note_s1** (device exported as `unnamed 130.xy`) — Fresh project. Track 2 expanded to 2 patterns (A+B). Pattern 1 is blank; Pattern 2 has one note trig at step 1 (`note=60`, `velocity=100`, default gate); all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=01`, descriptor@`0x58` = `00 00 1c 01 00 00`.
+- **r03_t5_p2_p1note_s1** (device exported as `unnamed 131.xy`) — Fresh project. Track 5 expanded to 2 patterns (A+B). Pattern 1 has one note trig at step 1 (`note=72`, `velocity=100`, default gate); Pattern 2 is blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=40`, `v57=00`, descriptor@`0x58` branch bytes include `00 1e 01 00 00` (short-form branch with additional pre-track shift seen at `0x1a`).
+- **r04_t5_p2_p2note_s1** (device exported as `unnamed 132.xy`) — Fresh project. Track 5 expanded to 2 patterns (A+B). Pattern 1 is blank; Pattern 2 has one note trig at step 1 (`note=72`, `velocity=100`, default gate); all other tracks remain single-pattern blank. Pre-track bytes: `v56=40`, `v57=00`, descriptor@`0x58` branch bytes include `00 02 01 00 00 19 01 00 00` (plus same additional pre-track shift at `0x1a` as r03).
+- **r05_t6_p2_p2note_s1** (device exported as `unnamed 133.xy`) — Fresh project. Track 6 expanded to 2 patterns (A+B). Pattern 1 is blank; Pattern 2 has one note trig at step 1 (`note=72`, `velocity=100`, default gate); all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `03 01 00 00 18 01 00 00`.
+- **r06_t6_p2_p1note_s1** (device exported as `unnamed 134.xy`) — Fresh project. Track 6 expanded to 2 patterns (A+B). Pattern 1 has one note trig at step 1 (`note=72` = `C5`, `velocity=100`, default gate); Pattern 2 is blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `1e 01 00 00` (short-form branch).
+- **r07_t7_p2_p1note_s1** (device exported as `unnamed 135.xy`) — Fresh project. Track 7 expanded to 2 patterns (A+B). Pattern 1 has one note trig at step 1 (`note=72` = `C5`, `velocity=100`, default gate); Pattern 2 is blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=40`, `v57=00`, descriptor@`0x58` = `00 1e 01 00 00` (short-form branch, `0x40` family).
+- **r08_t7_p2_p2note_s1** (device exported as `unnamed 136.xy`) — Fresh project. Track 7 expanded to 2 patterns (A+B). Pattern 1 is blank; Pattern 2 has one note trig at step 1 (`note=72` = `C5`, `velocity=100`, default gate); all other tracks remain single-pattern blank. Pre-track bytes: `v56=40`, `v57=00`, descriptor@`0x58` = `00 04 01 00 00 17 01 00 00` (`0x40` family long-form branch).
+- **r09_t8_p2_p1note_s1** (device exported as `unnamed 137.xy`) — Fresh project. Track 8 expanded to 2 patterns (A+B). Pattern 1 has one note trig at step 1 (`note=72` = `C5`, `velocity=100`, default gate); Pattern 2 is blank; all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `1e 01 00 00` (short-form branch).
+- **r10_t8_p2_p2note_s1** (device exported as `unnamed 138.xy`) — Fresh project. Track 8 expanded to 2 patterns (A+B). Pattern 1 is blank; Pattern 2 has one note trig at step 1 (`note=72` = `C5`, `velocity=100`, default gate); all other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `05 01 00 00 16 01 00 00`.
+- **s01_t5_p2_note_then_clear** (device exported as `unnamed 139.xy`) — Fresh project. Track 5 expanded to 2 patterns (A+B). Final saved state has both patterns blank (no decoded note events), but Pattern 1 is active (`0x07`) and Pattern 2 remains inactive (`0x05`), matching the intended "note then clear" branch probe. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `1e 01 00 00`.
+- **s02_t7_p2_note_then_clear** (device exported as `unnamed 140.xy`) — Fresh project. Track 7 expanded to 2 patterns (A+B). Final saved state has both patterns blank (no decoded note events), with Pattern 1 active (`0x07`) and Pattern 2 inactive (`0x05`), matching the intended "note then clear" branch probe. Pre-track bytes: `v56=40`, `v57=00`, descriptor@`0x58` = `00 1e 01 00 00`.
+- **s03_t1t3_p2_both_leader_notes** (device exported as `unnamed 141.xy`) — Fresh project. Tracks 1 and 3 expanded to 2 patterns each (A+B). Pattern 1 notes: T1 P1 step 1 `note=60` (`C4`) `velocity=100`; T3 P1 step 1 `note=36` (`C2`) `velocity=100`. Pattern 2 for both tracks is blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `1e 01 00 00`.
+- **s04_t1t3_p2_t3leader_only** (device exported as `unnamed 142.xy`) — Fresh project. Tracks 1 and 3 expanded to 2 patterns each (A+B). Track 1 patterns are blank/inactive in final save; Track 3 Pattern 1 has one note trig at step 1 (`note=48` = `C3`, `velocity=100`, default gate); Track 3 Pattern 2 is blank. Pre-track bytes: `v56=01`, `v57=00`, descriptor@`0x58` = `00 1d 01 00 00`.
+- **s05_t1_p8_blank** (device exported as `unnamed 143.xy`) — Fresh project. Track 1 expanded to 8 patterns; all eight patterns blank (no note events, no active `0x07` blocks). All other tracks remain single-pattern blank. Pre-track bytes: `v56=07`, `v57=00`, descriptor@`0x58` = `00 1d 01 00 00`.
+- **s06_t2_p8_blank** (device exported as `unnamed 144.xy`) — Fresh project. Track 2 expanded to 8 patterns; all eight patterns blank (no note events, no active `0x07` blocks). All other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=07`, descriptor@`0x58` = `00 00 1c 01 00 00`.
+- **s07_t3_p8_blank** (device exported as `unnamed 145.xy`) — Fresh project. Track 3 expanded to 8 patterns; all eight patterns blank (no note events, no active `0x07` blocks). All other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=00`, descriptor@`0x58` = `00 07 00 00 1b 01 00 00`.
+- **s08_t2p8_t3p8_blank** (device exported as `unnamed 146.xy`) — Fresh project. Tracks 2 and 3 each expanded to 8 patterns; all patterns blank (no note events, no active `0x07` blocks). All other tracks remain single-pattern blank. Pre-track bytes: `v56=00`, `v57=07`, descriptor@`0x58` = `07 00 00 00 1b 01 00 00`.
+- **s09_t1p8_t7p8_blank** (device exported as `unnamed 147.xy`) — Fresh project. Tracks 1 and 7 each expanded to 8 patterns; all patterns blank (no note events, no active `0x07` blocks). All other tracks remain single-pattern blank. Pre-track bytes: `v56=07`, `v57=00`, descriptor@`0x58` = `00 03 07 00 00 17 01 00 00`.
+- **j01_5trk_p9_blank** (device exported as `unnamed 90.xy`) — Tracks 1, 2, 3, 4, and 7 each expanded to 9 patterns; all patterns left blank. Structural capture to probe high pattern-count serialization without note payloads.
+- **j02_5trk_p9_sparse** (device exported as `unnamed 90b.xy`) — Follow-up to `j01`: sparse notes added across deep pattern slots for tracks 1/2/3/4/7 to test high-slot note placement with minimal event density.
+- **j03_t4_p2_p1note** (device exported as `unnamed 91.xy` after reset) — Track 4 focused capture for two-pattern behavior: note present in pattern 1 only.
+- **j04_t4_p2_p2note** (device exported as `unnamed 92.xy` after reset) — Track 4 focused capture for two-pattern behavior: note present in pattern 2 only.
+- **j05_t2_p3_blank** (device exported as `unnamed 93.xy` after reset) — Track 2 focused capture with 3 patterns, all blank. Confirms multi-pattern structural layout without note payloads on T2.
+- **j06_all16_p9_blank** (device exported as `unnamed 94.xy` after reset) — All tracks set up as a 9-pattern blank scaffold from the device side. In the currently decoded block-rotation layer this serializes as 80 logical entries (T1-T8 at 9 patterns each, T9-T16 at 1 pattern each), making it the baseline for high-count pattern mapping.
+- **j07_all16_p9_sparsemap** (device exported as `unnamed 95.xy` after reset) — Sparse-map follow-up to `j06` with deterministic placements: T1(P1 step1, P9 step9), T2(P2 step2, P9 step10), T3(P1 step3, P9 step11), T4(P2 step4, P9 step12), T5(P1 step5, P9 step13), T6(P2 step6, P9 step14), T7(P1 step7, P9 step15), T8(P2 step8, P9 step16).
+- **unnamed_118** — Hold step component on ALL 16 steps of track one, pattern one. Each step has Hold at default parameter value. All 15 repeat blocks are identical 8-byte `0a 02 00 00 00 04 00 00` entries. Data region = 128 bytes (16 × 8B uniform). Key specimen for understanding repeat-block encoding in single-type context.
+- **unnamed_119** — Different step component type on EACH of 16 steps in ascending order: step 1 Pulse, step 2 Hold, step 3 Multiply, step 4 Velocity, step 5 RampUp, step 6 RampDown, step 7 Random, step 8 Portamento, step 9 Bend, step 10 Tonality, step 11 Jump, step 12 Parameter, step 13 Conditional, step 14 unknown-14th-type, step 15 Pulse (repeat), step 16 Hold (repeat). Data region = 130 bytes (variable-length blocks: 6B, 8B, 9B, 10B, 4B sizes observed). Key specimen for full component type enumeration and variable-length block encoding.
+
+- **unnamed_120** — MIDI hold-record capture: CC32 (filter cutoff) ramp 0→127 on Track 3 (ch 3, Prism) only. First confirmation that external MIDI CCs are stored as p-lock data when using hold-record mode. T3 type 0x05→0x07, +179B. param_id=0xD0.
+- **unnamed_121** — MIDI hold-record capture (`cc_map_1a`): 8 simultaneous CC sweeps, one per track. T1=CC12(Param1), T2=CC13(Param2), T3=CC14(Param3), T4=CC15(Param4), T5=CC20(AmpA), T6=CC21(AmpD), T7=CC22(AmpS), T8=CC23(AmpR). All 8 tracks received p-lock data. T1 Drum uses 18-byte entry format; T2-T8 use standard 5-byte entries. File +1154B vs baseline.
+- **unnamed_122** — MIDI hold-record capture (`cc_map_1b`): CC24-31 sweeps + sustained notes on T1-T8. T1=CC24(FiltA), T2=CC25(FiltD), T3=CC26(FiltS), T4=CC27(FiltR), T5=CC28(Poly), T6=CC29(Porto), T7=CC30(PB), T8=CC31(EngVol). T1/T2 changed from Drum to synth engines before recording (Drum has no filter envelope). Notes sent alongside CCs for audible confirmation.
+- **unnamed_123** — MIDI hold-record capture (`cc_map_1c`): CC32-39 sweeps on T1-T8. T1=CC32(Cutoff), T2=CC33(Reso), T3=CC34(Env), T4=CC35(KeyTrack), T5=CC36(SendExt), T6=CC37(SendTape), T7=CC38(SendFXI), T8=CC39(SendFXII). CC-only, no notes. Same project as unnamed 122 (T1/T2 on synth engines).
+- **unnamed_124** — MIDI hold-record capture (`cc_map_1d`): LFO + mixer CCs on T1-T5. T1=CC40(LFOdest), T2=CC41(LFOparam), T3=CC7(Vol), T4=CC9(Mute, toggle 0/127 every 4 steps), T5=CC10(Pan). CC-only, no notes. Fresh project (default engines: T1/T2=Drum, T3-T8=synths). Mute CC9 not visually confirmed on device but may still be stored.
+- **unnamed_125** — MIDI hold-record capture (`cc_map_multi`): 3 simultaneous CCs on T3 (Prism). CC32(Cutoff) 0→127, CC12(Param1) 127→0, CC14(Param3) constant 64. Tests multi-lane p-lock encoding on a single track. Same project as unnamed 124.
+- **unnamed_126** — MIDI hold-record capture (`cc_map_2a`): Aux tracks 9-16. T9=CC7(Vol), T10=CC10(Pan), T11=CC12(Chan), T12=CC40(LFO), T13=CC12(Input), T14=CC12(xSpeed), T15=CC12(param1), T16=CC12(param1). First aux track p-lock capture.
+
+## Generated Writer Validation Files (`output/`)
+- **mp2_v5_105b_novel_single.xy** — Script-authored multi-pattern stress file using the `105b` compatibility branch. Layout: T1 P1 blank, T1 P2 note at step 5; T3 P1 note at step 12; T3 P2 note at step 2. Device load result: **PASS**.
+- **mp2_v5_105b_novel_dense.xy** — Script-authored denser variant in the same structural layout, with two notes in T1 P2 and two notes in each T3 pattern. Device load result: **PASS**.
+- Both files are intentionally non-byte-identical to `unnamed_105b`/`repro_105b`, confirming the branch supports novel pattern data rather than exact-byte clones only.
+- **mp2_v7_diag_h5_both_sparse.xy** — Diagnostic: both T1 and T3 carry note data in both patterns (sparse), 5-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_h7_both_sparse.xy** — Same sparse musical data, 7-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_h5_both_dense.xy** — Diagnostic: both tracks active in both patterns with denser drum+bass content (A/B variation + fill), 5-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_h7_both_dense.xy** — Same dense musical data, 7-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_t1both_dense_t3clone.xy** — Control: dense T1 A/B with T3 clone-only active. Device load result: **PASS**.
+- Combined takeaway: multi-pattern generation across multiple tracks (T1+T3) is now validated on-device; prior failures were due to a Track 3 leader event offset bug, not an inherent firmware limitation on dual-track A/B pattern content.

@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { DrumKeyboard } from './DrumKeyboard';
 import { EnhancedTooltip } from '../common/EnhancedTooltip';
 import { MidiDeviceSelector } from '../common/MidiDeviceSelector';
-import { cookieUtils, COOKIE_KEYS } from '../../utils/cookies';
+import { localStore, STORE_KEYS } from '../../utils/localStore';
 import { useWebMidi } from '../../hooks/useWebMidi';
 import type { MidiEvent } from '../../utils/midi';
 
@@ -43,7 +43,7 @@ export const DrumKeyboardContainer: React.FC<DrumKeyboardContainerProps> = ({ on
 
   // Pin state with cookie persistence
   const [isDrumKeyboardPinned, setIsDrumKeyboardPinned] = useState(() => {
-    const saved = cookieUtils.getCookie(COOKIE_KEYS.DRUM_KEYBOARD_PINNED);
+    const saved = localStore.get(STORE_KEYS.DRUM_KEYBOARD_PINNED);
     return saved === 'true';
   });
 
@@ -111,7 +111,7 @@ export const DrumKeyboardContainer: React.FC<DrumKeyboardContainerProps> = ({ on
   // Save pin state to cookie
   useEffect(() => {
     try {
-      cookieUtils.setCookie(COOKIE_KEYS.DRUM_KEYBOARD_PINNED, isDrumKeyboardPinned.toString(), 365);
+      localStore.set(STORE_KEYS.DRUM_KEYBOARD_PINNED, isDrumKeyboardPinned.toString());
     } catch (error) {
       console.warn('Failed to save drum keyboard pin state to cookie:', error);
     }

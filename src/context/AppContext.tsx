@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import type { AudioMetadata } from '../utils/audioFormats';
 import { midiNoteToString, parseFilename } from '../utils/audio';
 import type { Notification } from '../components/common/NotificationSystem';
-import { cookieUtils, COOKIE_KEYS } from '../utils/cookies';
+import type { AppTab } from '../types/opxy';
+import { localStore, STORE_KEYS } from '../utils/localStore';
 import type { FilenameSeparator } from '../utils/constants';
 import { loadDrumDefaultSettings, loadMultisampleDefaultSettings, loadDrumImportedPreset, loadMultisampleImportedPreset } from '../utils/defaultSettings';
 import { applyZeroCrossingToMarkers } from '../utils/audio';
@@ -60,7 +61,7 @@ export interface MultisampleFile {
 
 export interface AppState {
   // Current tab
-  currentTab: 'drum' | 'multisample' | 'feedback' | 'library' | 'donate';
+  currentTab: AppTab;
   
   // Drum tool settings
   drumSettings: {
@@ -142,18 +143,14 @@ export interface AppState {
   // Imported preset settings (for patch generation)
   importedDrumPreset: any | null;
   importedMultisamplePreset: any | null;
-  
-  // Session management
-  isSessionRestorationModalOpen: boolean;
-  sessionInfo: { timestamp: number; drumSamplesCount: number; multisampleFilesCount: number } | null;
-  
+
   // MIDI note mapping convention
   midiNoteMapping: 'C3' | 'C4';
 }
 
 // Define enhanced action types
 export type AppAction = 
-  | { type: 'SET_TAB'; payload: 'drum' | 'multisample' | 'feedback' | 'library' | 'donate' }
+  | { type: 'SET_TAB'; payload: AppTab }
   | { type: 'SET_DRUM_SAMPLE_RATE'; payload: number }
   | { type: 'SET_DRUM_BIT_DEPTH'; payload: number }
   | { type: 'SET_DRUM_CHANNELS'; payload: number }
@@ -220,9 +217,6 @@ export type AppAction =
   | { type: 'SET_IMPORTED_MULTISAMPLE_PRESET'; payload: any | null }
   | { type: 'TOGGLE_DRUM_KEYBOARD_PIN' }
   | { type: 'TOGGLE_MULTISAMPLE_KEYBOARD_PIN' }
-  | { type: 'RESTORE_SESSION'; payload: { drumSettings: AppState['drumSettings']; multisampleSettings: AppState['multisampleSettings']; drumSamples: Array<{ originalIndex: number; isAssigned: boolean; assignedKey?: number; file: File; audioBuffer: AudioBuffer; name: string; isLoaded: boolean; inPoint: number; outPoint: number; playmode: 'oneshot' | 'group' | 'loop' | 'gate'; reverse: boolean; transpose: number; pan: number; gain: number; hasBeenEdited: boolean; originalBitDepth: number; originalSampleRate: number; originalChannels: number; fileSize: number; duration: number; isFloat?: boolean }>; multisampleFiles: MultisampleFile[]; selectedMultisample: number | null; isDrumKeyboardPinned: boolean; isMultisampleKeyboardPinned: boolean } }
-  | { type: 'SET_SESSION_RESTORATION_MODAL_OPEN'; payload: boolean }
-  | { type: 'SET_SESSION_INFO'; payload: { timestamp: number; drumSamplesCount: number; multisampleFilesCount: number } | null }
   | { type: 'SET_MIDI_NOTE_MAPPING'; payload: 'C3' | 'C4' }
   | { type: 'UPDATE_ALL_MULTI_SAMPLES'; payload: Partial<MultisampleFile> }
   | { type: 'UPDATE_ALL_DRUM_SAMPLES'; payload: Partial<DrumSample> }
@@ -272,42 +266,32 @@ const initialMultisampleFile: MultisampleFile = {
   isFloat: false
 };
 
-// Function to get initial tab from cookie
-const getInitialTab = (): 'drum' | 'multisample' | 'feedback' | 'library' | 'donate' => {
+const getInitialTab = (): AppTab => {
   try {
-    const savedTab = cookieUtils.getCookie(COOKIE_KEYS.LAST_TAB);
-    if (savedTab === 'multisample') return 'multisample';
-    if (savedTab === 'feedback') return 'feedback';
-    if (savedTab === 'library') return 'library';
-    if (savedTab === 'donate') return 'donate';
-    return 'drum';
-  } catch (error) {
-    console.warn('Failed to load saved tab from cookie, defaulting to drum tab:', error);
-    return 'drum';
+    const savedTab = localStore.get(STORE_KEYS.LAST_TAB);
+    if (savedTab === 'device' || savedTab === 'drum' || savedTab === 'multisample') return savedTab;
+  } catch {
+    // ignore
+  }
+  return 'device';
+};
+
+const getInitialPinState = (key: string): boolean => {
+  try {
+    return localStore.get(key) === 'true';
+  } catch {
+    return false;
   }
 };
 
-// Function to get initial pin state from cookie
-const getInitialPinState = (key: string): boolean => {
-  try {
-    const savedPinState = cookieUtils.getCookie(key);
-    return savedPinState === 'true';
-  } catch (error) {
-    console.warn(`Failed to load pin state from cookie for key: ${key}`, error);
-    return false;
-  }
-}
-
-// Function to get initial MIDI note mapping from cookie
 const getInitialMidiMapping = (): 'C3' | 'C4' => {
   try {
-    const savedMapping = cookieUtils.getCookie(COOKIE_KEYS.MIDI_NOTE_MAPPING);
+    const savedMapping = localStore.get(STORE_KEYS.MIDI_NOTE_MAPPING);
     return savedMapping === 'C4' ? 'C4' : 'C3';
-  } catch (error) {
-    console.warn('Failed to load MIDI note mapping from cookie, defaulting to C3', error);
+  } catch {
     return 'C3';
   }
-}
+};
 
 const initialState: AppState = {
   currentTab: getInitialTab(),
@@ -318,13 +302,11 @@ const initialState: AppState = {
   selectedMultisample: null,
   isLoading: false,
   error: null,
-  isDrumKeyboardPinned: getInitialPinState(COOKIE_KEYS.DRUM_KEYBOARD_PINNED),
-  isMultisampleKeyboardPinned: getInitialPinState(COOKIE_KEYS.MULTISAMPLE_KEYBOARD_PINNED),
+  isDrumKeyboardPinned: getInitialPinState(STORE_KEYS.DRUM_KEYBOARD_PINNED),
+  isMultisampleKeyboardPinned: getInitialPinState(STORE_KEYS.MULTISAMPLE_KEYBOARD_PINNED),
   notifications: [],
   importedDrumPreset: loadDrumImportedPreset(),
   importedMultisamplePreset: loadMultisampleImportedPreset(),
-  isSessionRestorationModalOpen: false,
-  sessionInfo: null,
   midiNoteMapping: getInitialMidiMapping()
 };
 
@@ -332,11 +314,10 @@ const initialState: AppState = {
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_TAB':
-      // Save tab to cookie for persistence
       try {
-        cookieUtils.setCookie(COOKIE_KEYS.LAST_TAB, action.payload, 30);
+        localStore.set(STORE_KEYS.LAST_TAB, action.payload);
       } catch (error) {
-        console.warn('Failed to save tab to cookie:', error);
+        console.warn('Failed to save tab:', error);
       }
       return { ...state, currentTab: action.payload };
       
@@ -1244,86 +1225,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
       
     case 'TOGGLE_MULTISAMPLE_KEYBOARD_PIN':
       return { ...state, isMultisampleKeyboardPinned: !state.isMultisampleKeyboardPinned };
-      
-    case 'RESTORE_SESSION': {
-      // Create a properly sized drum samples array that can accommodate all samples
-      // Find the highest originalIndex to determine the array size
-      const maxIndex = Math.max(...action.payload.drumSamples.map(s => s.originalIndex), 23); // At least 24 slots
-      const restoredDrumSamples = Array.from({ length: maxIndex + 1 }, (_, index) => {
-        // If there's a restored sample at this index, use it; otherwise create proper initial state
-        const restoredSample = action.payload.drumSamples.find(s => s.originalIndex === index);
-        if (restoredSample) {
-          return {
-            file: restoredSample.file,
-            audioBuffer: restoredSample.audioBuffer,
-            name: restoredSample.name,
-            isLoaded: restoredSample.isLoaded,
-            isAssigned: restoredSample.isAssigned,
-            assignedKey: restoredSample.assignedKey,
-            inPoint: restoredSample.inPoint,
-            outPoint: restoredSample.outPoint,
-            playmode: restoredSample.playmode,
-            reverse: restoredSample.reverse,
-            transpose: restoredSample.transpose,
-            pan: restoredSample.pan,
-            gain: restoredSample.gain,
-            hasBeenEdited: restoredSample.hasBeenEdited,
-            originalBitDepth: restoredSample.originalBitDepth,
-            originalSampleRate: restoredSample.originalSampleRate,
-            originalChannels: restoredSample.originalChannels,
-            fileSize: restoredSample.fileSize,
-            duration: restoredSample.duration,
-            isFloat: restoredSample.isFloat
-          };
-        }
-        // For empty slots, create proper initial state with correct assignment
-        // Slots 0-23 should be assigned to their respective keys by default
-        const isInFirst24Slots = index < 24;
-        return createDrumSample(index, isInFirst24Slots);
-      });
-      
 
-
-      const newState = {
-        ...state,
-        drumSettings: action.payload.drumSettings,
-        multisampleSettings: action.payload.multisampleSettings,
-        drumSamples: restoredDrumSamples,
-        multisampleFiles: action.payload.multisampleFiles,
-        selectedMultisample: action.payload.selectedMultisample,
-        isDrumKeyboardPinned: action.payload.isDrumKeyboardPinned,
-        isMultisampleKeyboardPinned: action.payload.isMultisampleKeyboardPinned,
-        isSessionRestorationModalOpen: false,
-        sessionInfo: null
-      };
-
-
-      
-      return newState;
-    }
-      
-    case 'SET_SESSION_RESTORATION_MODAL_OPEN':
-      return { ...state, isSessionRestorationModalOpen: action.payload };
-      
-    case 'SET_SESSION_INFO':
-      return { ...state, sessionInfo: action.payload };
-      
     case 'SET_MIDI_NOTE_MAPPING': {
-      // Save to cookie for persistence
       try {
-        cookieUtils.setCookie(COOKIE_KEYS.MIDI_NOTE_MAPPING, action.payload, 30);
+        localStore.set(STORE_KEYS.MIDI_NOTE_MAPPING, action.payload);
       } catch (error) {
-        console.error('Failed to save MIDI note mapping to cookie:', error);
+        console.error('Failed to save MIDI note mapping:', error);
       }
-      
-      // Update note strings for all existing multisample files to reflect the new mapping
+
       const updatedMultisampleFiles = state.multisampleFiles.map(file => ({
         ...file,
         note: midiNoteToString(file.rootNote, action.payload)
       }));
-      
-      return { 
-        ...state, 
+
+      return {
+        ...state,
         midiNoteMapping: action.payload,
         multisampleFiles: updatedMultisampleFiles
       };
