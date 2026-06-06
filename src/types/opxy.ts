@@ -170,6 +170,7 @@ export interface DeviceStatus {
   deviceName: string | null;
   cacheRoot: string;
   lastPullAt: number | null;
+  error?: string | null;
 }
 
 export interface OpxyApi {

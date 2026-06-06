@@ -15,7 +15,7 @@ function createWindow(): void {
     width: 1100,
     height: 820,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -30,11 +30,16 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('device:status', () => ({
-    ...mtpStatus(),
-    cacheRoot: cacheRoot(),
-    lastPullAt,
-  }));
+  ipcMain.handle('device:status', () => {
+    const mtp = mtpStatus();
+    return {
+      connected: mtp.connected,
+      deviceName: mtp.deviceName ?? null,
+      cacheRoot: cacheRoot(),
+      lastPullAt,
+      error: mtp.error ?? null,
+    };
+  });
 
   ipcMain.handle('device:pull', () => {
     const root = cacheRoot();

@@ -9,7 +9,16 @@ export function DevicePage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!window.opxy) return;
+    if (!window.opxy) {
+      setStatus({
+        connected: false,
+        deviceName: null,
+        cacheRoot: '',
+        lastPullAt: null,
+        error: 'App bridge unavailable — restart the desktop app',
+      });
+      return;
+    }
     const s = await window.opxy.device.status();
     setStatus(s);
     if (s.lastPullAt) {
@@ -51,6 +60,9 @@ export function DevicePage() {
           <Tag type={status?.connected ? 'green' : 'gray'}>
             {status?.connected ? 'connected' : 'not connected'}
           </Tag>
+          {status?.deviceName && (
+            <span style={{ fontSize: '0.85rem' }}>{status.deviceName}</span>
+          )}
           {status?.cacheRoot && (
             <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
               cache: {status.cacheRoot}
@@ -74,6 +86,11 @@ export function DevicePage() {
 
         {busy && <InlineLoading description="Copying from MTP (this can take a minute)…" style={{ marginTop: '1rem' }} />}
         {message && <p style={{ marginTop: '1rem', marginBottom: 0 }}>{message}</p>}
+        {status?.error && !status.connected && (
+          <p style={{ marginTop: '0.75rem', marginBottom: 0, color: 'var(--color-text-error)' }}>
+            {status.error}
+          </p>
+        )}
       </Tile>
 
       <h3 style={{ fontWeight: 500 }}>Sample-based presets ({samplePresets.length})</h3>

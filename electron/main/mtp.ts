@@ -2,67 +2,100 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-function runMtpScript(action: 'status' | 'pull', dest: string): string {
-  const script = `
-$ErrorActionPreference = 'Stop'
-$Action = '${action}'
-$Dest = ${JSON.stringify(dest)}
-$shell = New-Object -ComObject Shell.Application
-$computer = $shell.NameSpace(0x11)
-$opxy = ($computer.Items() | Where-Object { $_.Name -eq 'OP-XY' })
-if (-not $opxy) { Write-Output '{"connected":false}'; exit 0 }
-$rootItem = ($opxy.GetFolder().Items() | Where-Object { $_.Name -eq 'OP-XY' })
-if (-not $rootItem) { Write-Output '{"connected":false}'; exit 0 }
-$rootFolder = $rootItem.GetFolder()
+const scriptPath = path.join(__dirname, 'mtp.ps1');
 
-if ($Action -eq 'status') {
-  Write-Output '{"connected":true,"deviceName":"OP-XY"}'
-  exit 0
+export interface MtpStatusResult {
+  connected: boolean;
+  deviceName?: string;
+  error?: string;
 }
 
-function Copy-Folder($folder, $destPath) {
-  New-Item -ItemType Directory -Path $destPath -Force | Out-Null
-  $shell.NameSpace($destPath).CopyHere($folder, 0x14)
+export interface MtpPullResult {
+  ok: boolean;
+  error?: string;
+  deviceName?: string;
 }
 
-$pres = ($rootFolder.Items() | Where-Object { $_.Name -eq 'presets' })
-$samp = ($rootFolder.Items() | Where-Object { $_.Name -eq 'samples' })
-if ($pres) { Copy-Folder ($pres.GetFolder()) (Join-Path $Dest 'presets') }
-if ($samp) { Copy-Folder ($samp.GetFolder()) (Join-Path $Dest 'samples') }
-Start-Sleep -Seconds 10
-Write-Output '{"connected":true,"ok":true}'
-`;
-
-  const result = spawnSync(
-    'powershell.exe',
-    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script],
-    { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: 180_000 },
-  );
-  if (result.error) throw result.error;
-  if (result.status !== 0) {
-    throw new Error(result.stderr?.trim() || result.stdout?.trim() || `PowerShell exit ${result.status}`);
+function runMtpScript(action: 'status' | 'pull', dest: string): { ok: boolean; data?: Record<string, unknown>; error?: string } {
+  if (!fs.existsSync(scriptPath)) {
+    return { ok: false, error: `MTP script missing: ${scriptPath}` };
   }
-  return result.stdout ?? '';
-}
 
-export function mtpStatus(): { connected: boolean; deviceName?: string } {
+  const args = [
+    '-STA',
+    '-NoProfile',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    scriptPath,
+    '-Action',
+    action,
+  ];
+  if (action === 'pull') {
+    args.push('-Dest', dest);
+  }
+
+  const result = spawnSync('powershell.exe', args, {
+    encoding: 'utf8',
+    maxBuffer: 10 * 1024 * 1024,
+    timeout: 180_000,
+    windowsHide: true,
+  });
+
+  if (result.error) {
+    return { ok: false, error: result.error.message };
+  }
+
+  const raw = (result.stdout ?? '').trim().replace(/^\uFEFF/, '');
+  if (!raw) {
+    const stderr = result.stderr?.trim();
+    return {
+      ok: false,
+      error: stderr || `PowerShell produced no output (exit ${result.status ?? 'unknown'})`,
+    };
+  }
+
   try {
-    return JSON.parse(runMtpScript('status', '').trim() || '{}');
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    if (result.status !== 0 && !data.error) {
+      return { ok: false, data, error: `PowerShell exit ${result.status}` };
+    }
+    return { ok: true, data };
   } catch {
-    return { connected: false };
+    return { ok: false, error: `Invalid JSON from MTP script: ${raw.slice(0, 200)}` };
   }
 }
 
-export function mtpPull(dest: string): { ok: boolean; error?: string } {
+export function mtpStatus(): MtpStatusResult {
+  const result = runMtpScript('status', '');
+  if (!result.ok || !result.data) {
+    return { connected: false, error: result.error ?? 'MTP status check failed' };
+  }
+
+  return {
+    connected: Boolean(result.data.connected),
+    deviceName: typeof result.data.deviceName === 'string' ? result.data.deviceName : undefined,
+    error: typeof result.data.error === 'string' ? result.data.error : undefined,
+  };
+}
+
+export function mtpPull(dest: string): MtpPullResult {
   if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
   fs.mkdirSync(dest, { recursive: true });
-  try {
-    const parsed = JSON.parse(runMtpScript('pull', dest).trim() || '{}');
-    if (!parsed.ok) return { ok: false, error: 'MTP pull failed' };
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+
+  const result = runMtpScript('pull', dest);
+  if (!result.ok || !result.data) {
+    return { ok: false, error: result.error ?? 'MTP pull failed' };
   }
+
+  if (!result.data.ok) {
+    return {
+      ok: false,
+      error: typeof result.data.error === 'string' ? result.data.error : 'MTP pull failed',
+    };
+  }
+
+  return { ok: true, deviceName: typeof result.data.deviceName === 'string' ? result.data.deviceName : undefined };
 }
 
 export function countCacheEntries(cacheRoot: string): { presetCount: number; sampleCount: number } {
