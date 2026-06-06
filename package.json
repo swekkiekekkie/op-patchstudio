@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "OP-XY MTP device manager — browse, rename, backup presets and samples",
-  "main": "./out/main/index.js",
+  "main": "./out/main/index.cjs",
   "type": "module",
   "license": "MIT",
   "scripts": {

@@ -25,16 +25,18 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin(), copyMtpScript()],
     build: {
-      rollupOptions: {
-        input: resolve(root, 'electron/main/index.ts'),
+      lib: {
+        entry: resolve(root, 'electron/main/index.ts'),
+        formats: ['cjs'],
       },
     },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
-      rollupOptions: {
-        input: resolve(root, 'electron/preload/index.ts'),
+      lib: {
+        entry: resolve(root, 'electron/preload/index.ts'),
+        formats: ['cjs'],
       },
     },
   },

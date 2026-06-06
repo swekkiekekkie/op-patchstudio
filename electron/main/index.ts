@@ -10,14 +10,27 @@ function cacheRoot(): string {
   return path.join(app.getPath('userData'), 'device-cache');
 }
 
+function preloadPath(): string {
+  const candidates = [
+    path.join(__dirname, '../preload/index.cjs'),
+    path.join(__dirname, '../preload/index.js'),
+    path.join(__dirname, '../preload/index.mjs'),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return candidates[0];
+}
+
 function createWindow(): void {
   const win = new BrowserWindow({
     width: 1100,
     height: 820,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.mjs'),
+      preload: preloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false,
     },
   });
 

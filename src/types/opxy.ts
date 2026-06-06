@@ -187,7 +187,7 @@ export interface OpxyApi {
 
 declare global {
   interface Window {
-    opxy: OpxyApi;
+    opxy?: OpxyApi;
   }
 }
 

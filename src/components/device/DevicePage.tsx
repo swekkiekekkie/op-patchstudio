@@ -10,12 +10,15 @@ export function DevicePage() {
 
   const refresh = useCallback(async () => {
     if (!window.opxy) {
+      const inBrowser = typeof navigator !== 'undefined' && !navigator.userAgent.includes('Electron');
       setStatus({
         connected: false,
         deviceName: null,
         cacheRoot: '',
         lastPullAt: null,
-        error: 'App bridge unavailable — restart the desktop app',
+        error: inBrowser
+          ? 'Opened in a browser — use the Electron window from npm run dev'
+          : 'App bridge unavailable — quit and run npm run dev again',
       });
       return;
     }
