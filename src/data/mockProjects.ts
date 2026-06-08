@@ -1,0 +1,96 @@
+import type { ProjectArrangement } from '../types/sync';
+
+export const MOCK_PROJECT_ARRANGEMENTS: Record<string, ProjectArrangement> = {
+  'nt aeroplane live.xy': {
+    filename: 'nt aeroplane live.xy',
+    tempo: 128,
+    sceneCount: 12,
+    refs: { total: 56, missing: 1 },
+    tracks: {
+      1: { patterns: { 1: { preset: 'nt-aeroplane' }, 2: { preset: 'tape kit' }, 3: { preset: 'nt-aeroplane', kind: 'tweaked' } } },
+      2: { patterns: { 1: { preset: 'nt-aeroplane' }, 2: { preset: '', kind: 'custom' } } },
+      3: { patterns: { 1: { preset: 'glass prism' }, 2: { preset: 'warm axis', kind: 'tweaked' } } },
+      4: { patterns: { 1: { preset: '—', kind: 'custom' } } },
+      5: { patterns: { 1: { preset: '—' } } },
+      6: { patterns: { 1: { preset: 'tape loop' }, 2: { preset: 'tape loop' }, 3: { preset: 'fade take extended mixdown' } } },
+      7: { patterns: { 1: { preset: '—' } } },
+      8: { patterns: { 1: { preset: '—' } } },
+    },
+    scenes: [
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 2, 2: 1, 3: 2, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1 },
+      { 1: 2, 2: 1, 3: 2, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1 },
+      { 1: 3, 2: 1, 3: 2, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1 },
+    ],
+    sampleRefs: [
+      { filename: 'kick clean c2 01.wav', status: 'found', linkLabel: 'found · drum/nt-aeroplane', goto: 'presets', target: 'nt-aeroplane' },
+      { filename: 'hat noise f#3 04.wav', status: 'missing' },
+      { filename: 'texture long a2.wav', status: 'found', linkLabel: 'found · samples/user', goto: 'samples', target: 'field noise a2.wav' },
+      { filename: 'pluck beach bum.wav', status: 'found', linkLabel: 'found · prism/glass', goto: 'presets', target: 'glass prism' },
+    ],
+  },
+  'ambient sketch.xy': {
+    filename: 'ambient sketch.xy',
+    tempo: 72,
+    sceneCount: 4,
+    refs: { total: 42, missing: 1 },
+    tracks: {
+      1: { patterns: { 1: { preset: 'clean kit' } } },
+      2: { patterns: { 1: { preset: 'clean kit' } } },
+      3: { patterns: { 1: { preset: 'low choir' }, 2: { preset: 'glass key' } } },
+      4: { patterns: { 1: { preset: '—' } } },
+      5: { patterns: { 1: { preset: '—' } } },
+      6: { patterns: { 1: { preset: '—' } } },
+      7: { patterns: { 1: { preset: '—' } } },
+      8: { patterns: { 1: { preset: '—' } } },
+    },
+    scenes: [
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+      { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+    ],
+    sampleRefs: [],
+  },
+  'club tool 07.xy': {
+    filename: 'club tool 07.xy',
+    tempo: 132,
+    sceneCount: 8,
+    refs: { total: 18, missing: 0 },
+    tracks: {
+      1: { patterns: { 1: { preset: 'tape kit' }, 2: { preset: 'clean kit' } } },
+      2: { patterns: { 1: { preset: 'tape kit' } } },
+      3: { patterns: { 1: { preset: 'warm axis' } } },
+    },
+    scenes: Array.from({ length: 8 }, (_, i) => ({ 1: i % 2 ? 2 : 1, 2: 1, 3: 1 })),
+    sampleRefs: [],
+  },
+  'broken clouds.xy': {
+    filename: 'broken clouds.xy',
+    tempo: 94,
+    sceneCount: 3,
+    refs: { total: 31, missing: 0 },
+    tracks: {
+      1: { patterns: { 1: { preset: 'clean kit' } } },
+      3: { patterns: { 1: { preset: 'glass prism' } } },
+    },
+    scenes: [{ 1: 1, 3: 1 }, { 1: 1, 3: 1 }, { 1: 1, 3: 1 }],
+    sampleRefs: [],
+  },
+};
+
+export const MOCK_PROJECT_LIST = Object.values(MOCK_PROJECT_ARRANGEMENTS).map((project, index) => ({
+  id: project.filename,
+  name: project.filename,
+  relativePath: `projects/${project.filename}`,
+  sceneCount: project.sceneCount,
+  index: index + 1,
+}));

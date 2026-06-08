@@ -2,8 +2,32 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createBackup, listBackups } from './backup';
-import { countCacheEntries, mtpPull, mtpStatus } from './mtp';
-import { listPresets, readBytes, readText } from './cache';
+import { countCacheEntries, mtpPull, mtpPush, mtpStatus } from './mtp';
+import {
+  getPresetDetail,
+  listCategories,
+  listPresets,
+  listStandaloneSamples,
+  readBytes,
+  readText,
+  renameSampleInPreset,
+  renameStandaloneSample,
+  restoreCacheFromBackup,
+  writePresetFolder,
+} from './cache';
+import {
+  clearAllDirty,
+  clearPresetDirty,
+  listDirtyPresets,
+  markPresetDirty,
+} from './cacheSession';
+import {
+  buildProjectIndex,
+  getProjectIndexSummary,
+  getRenameImpact,
+  invalidateProjectIndex,
+  listProjects,
+} from './projectIndex';
 
 let lastPullAt: number | null = null;
 let lastBackupAt: number | null = null;
@@ -57,6 +81,7 @@ app.whenReady().then(() => {
       lastBackupAt,
       presetCount: counts.presetCount,
       sampleCount: counts.sampleCount,
+      dirtyPresetCount: listDirtyPresets().length,
       error: mtp.error ?? null,
     };
   });
@@ -64,14 +89,86 @@ app.whenReady().then(() => {
   ipcMain.handle('device:pull', () => {
     const root = cacheRoot();
     const result = mtpPull(root);
-    if (result.ok) lastPullAt = Date.now();
+    if (result.ok) {
+      lastPullAt = Date.now();
+      clearAllDirty();
+      invalidateProjectIndex();
+      buildProjectIndex(root);
+    }
     const counts = countCacheEntries(root);
     return { ...result, ...counts };
+  });
+
+  ipcMain.handle('device:push', () => {
+    const result = mtpPush(cacheRoot());
+    if (result.ok) clearAllDirty();
+    return result;
   });
 
   ipcMain.handle('cache:root', () => cacheRoot());
 
   ipcMain.handle('cache:listPresets', () => listPresets(cacheRoot()));
+
+  ipcMain.handle('cache:listStandaloneSamples', () => listStandaloneSamples(cacheRoot()));
+
+  ipcMain.handle('cache:listCategories', () => listCategories(cacheRoot()));
+
+  ipcMain.handle('cache:getPresetDetail', (_e, rel: string) => getPresetDetail(cacheRoot(), rel));
+
+  ipcMain.handle('cache:renameSampleInPreset', (_e, presetPath: string, oldFilename: string, newBase: string) => {
+    const result = renameSampleInPreset(cacheRoot(), presetPath, oldFilename, newBase);
+    if (result.ok) {
+      markPresetDirty(presetPath);
+      invalidateProjectIndex();
+    }
+    return result;
+  });
+
+  ipcMain.handle('cache:renameStandaloneSample', (_e, rel: string, newBase: string) => {
+    const result = renameStandaloneSample(cacheRoot(), rel, newBase);
+    if (result.ok) invalidateProjectIndex();
+    return result;
+  });
+
+  ipcMain.handle(
+    'cache:writePreset',
+    (_e, category: string, presetName: string, patchJson: string, files: Array<{ name: string; data: number[] }>) => {
+      const buffers = files.map((f) => ({ name: f.name, data: Buffer.from(f.data) }));
+      const result = writePresetFolder(cacheRoot(), category, presetName, patchJson, buffers);
+      if (result.ok && result.relativePath) markPresetDirty(result.relativePath);
+      return result;
+    },
+  );
+
+  ipcMain.handle('cache:restoreBackup', (_e, backupPath: string) => {
+    const result = restoreCacheFromBackup(cacheRoot(), backupPath);
+    if (result.ok) clearAllDirty();
+    return result;
+  });
+
+  ipcMain.handle('cache:listDirtyPresets', () => listDirtyPresets());
+
+  ipcMain.handle('cache:clearDirtyPreset', (_e, rel: string) => {
+    clearPresetDirty(rel);
+  });
+
+  ipcMain.handle('cache:getRenameImpact', (_e, oldFilename: string, newBase: string) =>
+    getRenameImpact(cacheRoot(), oldFilename, newBase),
+  );
+
+  ipcMain.handle('cache:buildProjectIndex', () => {
+    const root = cacheRoot();
+    if (!fs.existsSync(path.join(root, 'projects'))) return null;
+    return buildProjectIndex(root).summary;
+  });
+
+  ipcMain.handle('cache:projectIndexSummary', () => getProjectIndexSummary(cacheRoot()));
+
+  ipcMain.handle('cache:listProjects', () => {
+    const root = cacheRoot();
+    if (!fs.existsSync(path.join(root, 'projects'))) return [];
+    return listProjects(root);
+  });
 
   ipcMain.handle('cache:readText', (_e, rel: string) => readText(cacheRoot(), rel));
 

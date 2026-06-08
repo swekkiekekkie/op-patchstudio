@@ -146,6 +146,16 @@ export interface AppState {
 
   // MIDI note mapping convention
   midiNoteMapping: 'C3' | 'C4';
+
+  /** Preset opened from device cache — used for save-back and editor context */
+  cacheSource: CacheSource | null;
+}
+
+export interface CacheSource {
+  relativePath: string;
+  name: string;
+  category: string;
+  type: string;
 }
 
 // Define enhanced action types
@@ -220,7 +230,8 @@ export type AppAction =
   | { type: 'SET_MIDI_NOTE_MAPPING'; payload: 'C3' | 'C4' }
   | { type: 'UPDATE_ALL_MULTI_SAMPLES'; payload: Partial<MultisampleFile> }
   | { type: 'UPDATE_ALL_DRUM_SAMPLES'; payload: Partial<DrumSample> }
-  | { type: 'CLEAR_ALL_DRUM_SAMPLES' };
+  | { type: 'CLEAR_ALL_DRUM_SAMPLES' }
+  | { type: 'SET_CACHE_SOURCE'; payload: CacheSource | null };
 
 // Initial state for drum samples
 const initialDrumSample: DrumSample = {
@@ -267,9 +278,12 @@ const initialMultisampleFile: MultisampleFile = {
 };
 
 const getInitialTab = (): AppTab => {
+  // Shell is always the home view; drum/multisample editors are transient overlays.
   try {
     const savedTab = localStore.get(STORE_KEYS.LAST_TAB);
-    if (savedTab === 'device' || savedTab === 'drum' || savedTab === 'multisample') return savedTab;
+    if (savedTab === 'drum' || savedTab === 'multisample') {
+      localStore.set(STORE_KEYS.LAST_TAB, 'device');
+    }
   } catch {
     // ignore
   }
@@ -307,17 +321,20 @@ const initialState: AppState = {
   notifications: [],
   importedDrumPreset: loadDrumImportedPreset(),
   importedMultisamplePreset: loadMultisampleImportedPreset(),
-  midiNoteMapping: getInitialMidiMapping()
+  midiNoteMapping: getInitialMidiMapping(),
+  cacheSource: null,
 };
 
 // Enhanced reducer function
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_TAB':
-      try {
-        localStore.set(STORE_KEYS.LAST_TAB, action.payload);
-      } catch (error) {
-        console.warn('Failed to save tab:', error);
+      if (action.payload === 'device') {
+        try {
+          localStore.set(STORE_KEYS.LAST_TAB, action.payload);
+        } catch (error) {
+          console.warn('Failed to save tab:', error);
+        }
       }
       return { ...state, currentTab: action.payload };
       
@@ -1270,6 +1287,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }),
       };
     }
+
+    case 'SET_CACHE_SOURCE':
+      if (action.payload === null && (state.currentTab === 'drum' || state.currentTab === 'multisample')) {
+        return { ...state, cacheSource: null, currentTab: 'device' };
+      }
+      return { ...state, cacheSource: action.payload };
 
     default: {
       return state;

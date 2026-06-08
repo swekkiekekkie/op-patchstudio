@@ -1,0 +1,4027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OP-XY MTP — UI prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --grid: 8px;
+      --font-ui: 'Inter', system-ui, sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --ease: 140ms ease;
+      --data-bg: #151719;
+      --projects-bg: #33383b;
+      --presets-bg: #8a9092;
+      --samples-bg: #e8e9e7;
+      --off-white: #e8e9e7;
+      --black: #0a0a0a;
+      --data-btn-size: 76px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.35;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      transition: background var(--ease), color var(--ease);
+    }
+
+    body.mode-data { background: var(--data-bg); color: var(--off-white); }
+    body.mode-projects { background: var(--projects-bg); color: var(--off-white); }
+    body.mode-presets { background: var(--presets-bg); color: var(--black); }
+    body.mode-samples { background: var(--samples-bg); color: var(--black); }
+
+    .mono { font-family: var(--font-mono); font-size: 12px; letter-spacing: -0.02em; }
+    .label { text-transform: lowercase; font-weight: 500; opacity: 0.72; font-size: 11px; }
+
+    /* status strip */
+    .status-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+      border-bottom: 1px solid currentColor;
+      border-color: color-mix(in srgb, currentColor 14%, transparent);
+      flex-shrink: 0;
+      gap: calc(var(--grid) * 2);
+    }
+    .status-strip h1 {
+      font-weight: 500;
+      font-size: 15px;
+      letter-spacing: -0.03em;
+      text-transform: lowercase;
+      margin: 0;
+      flex-shrink: 0;
+    }
+    .status-strip-right {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 2);
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .header-seg.segments { margin: 0; gap: 0; }
+    .header-seg .seg {
+      padding: 4px 10px;
+      font-size: 11px;
+      margin-bottom: 0;
+    }
+    .status-strip .meta { opacity: 0.5; font-size: 11px; }
+
+    /* main content — horizontal mode track */
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: calc(var(--grid) * 3);
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mode-viewport {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .mode-track {
+      display: flex;
+      width: 400%;
+      height: 100%;
+      transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .mode-panel {
+      flex: 0 0 25%;
+      width: 25%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .mode-panel > .screen,
+    .mode-panel-presets .screen,
+    .mode-panel-samples .screen {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .mode-panel-presets { position: relative; }
+
+    .screen-title {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: lowercase;
+      opacity: 0.65;
+      margin-bottom: calc(var(--grid) * 1);
+    }
+    .screen-headline {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      margin-bottom: calc(var(--grid) * 3);
+    }
+    .screen-headline .mono { font-size: 14px; font-weight: 400; opacity: 0.8; }
+
+    body.mode-presets .screen-title,
+    body.mode-presets .screen-headline,
+    body.mode-samples .screen-title,
+    body.mode-samples .screen-headline { display: none; }
+
+    /* ── DATA SCREEN ── */
+    .data-stack {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* shared square icon buttons on data screen */
+    .data-btn {
+      width: var(--data-btn-size);
+      height: var(--data-btn-size);
+      border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+      background: #1c1f22;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 0;
+      flex-shrink: 0;
+      transition: background var(--ease), opacity var(--ease);
+    }
+    .data-btn:hover:not(:disabled) { background: #252a2e; }
+    .data-btn:disabled { opacity: 0.22; cursor: not-allowed; }
+    .data-btn.active { background: color-mix(in srgb, currentColor 12%, transparent); opacity: 1; }
+    .data-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      flex-shrink: 0;
+    }
+    .data-btn span {
+      font-size: 10px;
+      text-transform: lowercase;
+      font-weight: 500;
+      opacity: 0.8;
+      line-height: 1;
+      text-align: center;
+      max-width: calc(var(--data-btn-size) - 8px);
+    }
+
+    .device-pane {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: calc(var(--grid) * 3);
+      background: #1a1d20;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+    .device-pane.offline .device-live-inner { display: none; }
+    .device-pane.offline .device-offline-state { display: flex; }
+    .device-pane.offline .device-body { justify-content: center; }
+
+    .device-offline-state {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--grid) * 3);
+      min-height: 0;
+    }
+    .device-connect-art {
+      width: min(280px, 72%);
+      border: none;
+      pointer-events: none;
+    }
+    .device-connect-art svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .device-offline-hint {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.55;
+      text-align: center;
+    }
+
+    .device-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: 0;
+    }
+
+    .pane-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: calc(var(--grid) * 2);
+      flex-shrink: 0;
+      min-height: 18px;
+      flex-wrap: wrap;
+      gap: calc(var(--grid) * 2);
+    }
+    .pane-head .title {
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: lowercase;
+      letter-spacing: -0.02em;
+    }
+    .pane-head .set-pane-name {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      opacity: 0.8;
+    }
+    .pane-head .set-pane-name::before {
+      content: '·';
+      margin: 0 8px;
+      opacity: 0.35;
+      font-weight: 400;
+    }
+    .sets-pane.on-device .set-pane-name::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+      background: currentColor;
+      opacity: 0.55;
+    }
+    .pane-head-right {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 2);
+      flex-wrap: wrap;
+    }
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.7;
+    }
+    .status-dot .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .status-dot .dot.off { opacity: 0.25; }
+
+    .device-offline-hint p { display: none; }
+
+    .device-live-inner {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: calc(var(--grid) * 3);
+      align-items: end;
+      transition: opacity var(--ease);
+    }
+
+    .storage-block { margin-bottom: 0; }
+    .storage-block .storage-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: calc(var(--grid) * 1);
+    }
+    .storage-block .storage-head .label { margin: 0; }
+    .storage-block .storage-total {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      opacity: 0.65;
+    }
+    .stacked-bar {
+      height: 16px;
+      display: flex;
+      width: 100%;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: color-mix(in srgb, currentColor 6%, transparent);
+      overflow: hidden;
+    }
+    .stack-seg { height: 100%; min-width: 1px; }
+    .stack-seg.presets { background: color-mix(in srgb, currentColor 55%, transparent); }
+    .stack-seg.samples { background: color-mix(in srgb, currentColor 38%, transparent); }
+    .stack-seg.projects { background: color-mix(in srgb, currentColor 24%, transparent); }
+    .stack-seg.other { background: color-mix(in srgb, currentColor 14%, transparent); }
+    .stack-seg.free { background: transparent; flex: 1; min-width: 0; }
+
+    .storage-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px 12px;
+      margin-top: calc(var(--grid) * 1.5);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.7;
+    }
+    .storage-legend span::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 5px;
+      vertical-align: -1px;
+      border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    }
+    .storage-legend .l-presets::before { background: color-mix(in srgb, currentColor 55%, transparent); }
+    .storage-legend .l-samples::before { background: color-mix(in srgb, currentColor 38%, transparent); }
+    .storage-legend .l-projects::before { background: color-mix(in srgb, currentColor 24%, transparent); }
+    .storage-legend .l-other::before { background: color-mix(in srgb, currentColor 14%, transparent); }
+    .storage-legend .l-free::before { background: transparent; }
+
+    .pane-stats {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      opacity: 0.75;
+      line-height: 1.65;
+      text-align: right;
+    }
+
+    /* transfer row between device and sets */
+    .transfer-row {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--grid) * 3);
+      padding: calc(var(--grid) * 2);
+      background: #151719;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    /* sets panel */
+    .sets-pane {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: calc(var(--grid) * 3);
+      background: #1c1f22;
+    }
+    .sets-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sets-carousel-wrap {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .sets-viewport {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    .sets-track {
+      display: flex;
+      height: 100%;
+      transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .set-slide {
+      flex: 0 0 auto;
+      height: 100%;
+      opacity: 0.28;
+      transition: opacity 320ms ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .set-slide.active { opacity: 1; }
+
+    .set-slide .set-live-inner {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: calc(var(--grid) * 3);
+      align-items: end;
+    }
+    .set-slide .pane-stats { text-align: right; opacity: 0.75; }
+
+    /* sets toolbar — below sets content, outside equal split */
+    .sets-toolbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+      border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      flex-shrink: 0;
+      background: #1c1f22;
+    }
+    .sets-toolbar-left,
+    .sets-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 1);
+      flex-shrink: 0;
+    }
+    .sets-toolbar-right { margin-left: auto; }
+    .set-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 calc(var(--grid) * 1);
+    }
+    .set-dots i {
+      display: block;
+      width: 6px;
+      height: 6px;
+      border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+      font-style: normal;
+    }
+    .set-dots i.on {
+      background: currentColor;
+      opacity: 0.75;
+    }
+
+    .sets-picker {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 0;
+      min-width: 180px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: #1a1d20;
+      z-index: 10;
+    }
+    .sets-picker button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+      border: none;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .sets-picker button:last-child { border-bottom: none; }
+    .sets-picker button:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+    .sets-picker button.active { opacity: 1; font-weight: 500; }
+    .sets-picker-wrap { position: relative; }
+
+    .history-panel {
+      border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      background: #181b1e;
+      flex-shrink: 0;
+      max-height: 160px;
+      overflow: auto;
+    }
+    .history-panel.hidden { display: none; }
+    .history-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 3);
+      font-size: 11px;
+      opacity: 0.6;
+      text-transform: lowercase;
+    }
+    .history-list {
+      list-style: none;
+      padding: 0 calc(var(--grid) * 3) calc(var(--grid) * 2);
+    }
+    .history-list li {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: calc(var(--grid) * 1) 0;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 6%, transparent);
+      opacity: 0.7;
+    }
+    .history-list li.current { opacity: 1; }
+    .history-list li.current::before {
+      content: '● ';
+      opacity: 0.5;
+    }
+
+    /* preflight panel */
+    .slab {
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      padding: calc(var(--grid) * 3);
+      margin-top: calc(var(--grid) * 2);
+      max-width: 420px;
+    }
+    body.mode-data .slab { background: #1c1f22; }
+    .slab h3 {
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: lowercase;
+      margin-bottom: calc(var(--grid) * 2);
+    }
+    .slab p { font-family: var(--font-mono); font-size: 12px; opacity: 0.85; margin-bottom: 6px; }
+    .slab-actions { display: flex; gap: calc(var(--grid) * 2); margin-top: calc(var(--grid) * 3); }
+    .slab-actions button {
+      flex: 1;
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+      border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      text-transform: lowercase;
+      cursor: pointer;
+    }
+    .slab-actions button.primary {
+      background: color-mix(in srgb, currentColor 12%, transparent);
+    }
+
+    /* segment control */
+    .segments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: calc(var(--grid) * 1);
+      margin-bottom: calc(var(--grid) * 3);
+    }
+    .seg {
+      padding: 6px 12px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    .seg.active { opacity: 1; background: color-mix(in srgb, currentColor 10%, transparent); }
+
+    /* search */
+    .search {
+      width: 100%;
+      max-width: 480px;
+      padding: 10px 12px;
+      margin-bottom: calc(var(--grid) * 3);
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: color-mix(in srgb, currentColor 4%, transparent);
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .search::placeholder { opacity: 0.45; }
+
+    /* object list */
+    .group-label {
+      font-size: 11px;
+      text-transform: lowercase;
+      opacity: 0.55;
+      padding: calc(var(--grid) * 2) 0 calc(var(--grid) * 1);
+      border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+      margin-top: calc(var(--grid) * 2);
+    }
+    .group-label:first-of-type { border-top: none; margin-top: 0; }
+    .group-label.collapsible {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .group-label.collapsible::before {
+      content: '▾';
+      font-size: 10px;
+      opacity: 0.45;
+    }
+    .group-label.collapsible.collapsed::before { content: '▸'; }
+    .list-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 1) calc(var(--grid) * 2);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      font-size: 10px;
+      opacity: 0.55;
+    }
+    .list-toolbar button {
+      padding: 2px 6px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    .list-toolbar button:hover { opacity: 1; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: calc(var(--grid) * 2);
+      align-items: center;
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 1);
+      border-left: 2px solid transparent;
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+    .row:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+    .row.selected {
+      border-left-color: currentColor;
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+    .row .idx { font-family: var(--font-mono); font-size: 11px; opacity: 0.5; }
+    .row .name { font-weight: 500; }
+    .row .meta { font-family: var(--font-mono); font-size: 11px; opacity: 0.65; text-align: right; }
+
+    /* breadcrumb */
+    .breadcrumb {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: calc(var(--grid) * 3);
+      padding-bottom: calc(var(--grid) * 2);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    }
+    .breadcrumb span { opacity: 0.45; }
+
+    /* split layout for detail */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(var(--grid) * 3);
+      min-height: 280px;
+    }
+    @media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
+
+    .pane {
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      padding: calc(var(--grid) * 2);
+      overflow: auto;
+    }
+    body.mode-data .pane { background: #1a1d20; }
+    body.mode-projects .pane { background: #383d40; }
+    body.mode-presets .pane { background: #92989a; }
+    body.mode-samples .pane { background: #dcdedcc; }
+
+    .ref-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 1.5) 0;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .ref-row:last-child { border-bottom: none; }
+    .ref-row .link { opacity: 0.55; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .ref-row .link:hover { opacity: 1; }
+
+    /* bottom mode tabs */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      flex-shrink: 0;
+      height: 64px;
+    }
+    .mode-tab {
+      border: none;
+      border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: lowercase;
+      cursor: pointer;
+      transition: opacity var(--ease);
+      opacity: 0.55;
+    }
+    .mode-tab.active { opacity: 1; }
+    .mode-tab[data-mode="data"] { background: var(--data-bg); color: var(--off-white); }
+    .mode-tab[data-mode="projects"] { background: var(--projects-bg); color: var(--off-white); }
+    .mode-tab[data-mode="presets"] { background: var(--presets-bg); color: var(--black); }
+    .mode-tab[data-mode="samples"] { background: var(--samples-bg); color: var(--black); }
+
+    /* field keyboard — OP-XY / OP-1 layout, F-root, two octaves */
+    .field-keyboard {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      user-select: none;
+    }
+    .field-keyboard--compact .field-kb-octave { height: 58px; }
+    .field-keyboard--compact .field-kb-key { height: 38px; font-size: 7px; }
+    .field-keyboard--compact .field-kb-key .key-tag { display: none; }
+    .field-kb-octave {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      padding: 3px;
+      height: 72px;
+      border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+      border-radius: 4px;
+    }
+    .field-kb-row {
+      display: flex;
+      gap: 1px;
+      justify-content: flex-start;
+      align-items: flex-end;
+    }
+    .field-kb-row-top { height: 42px; align-items: flex-start; }
+    .field-kb-row-bottom { flex: 1; }
+    .field-kb-key {
+      height: 46px;
+      border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+      background: color-mix(in srgb, #fff 90%, currentColor);
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 0 4px;
+      cursor: pointer;
+      position: relative;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      flex-shrink: 0;
+    }
+    .field-kb-key--white { width: 32px; }
+    .field-kb-key--black { width: 48px; background: #1a1a1a; color: #ccc; border-color: #111; height: 38px; }
+    .field-kb-key--black.field-kb-key--narrow { width: 32px; }
+    .field-kb-key .key-char { opacity: 0.45; line-height: 1; text-transform: lowercase; }
+    .field-kb-key--black .key-char { opacity: 0.7; color: #aaa; }
+    .field-kb-key .key-tag {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-size: 7px;
+      font-weight: 600;
+      padding: 1px 3px;
+      background: color-mix(in srgb, currentColor 20%, #333);
+      color: #fff;
+      border-radius: 2px;
+      text-transform: lowercase;
+    }
+    .field-kb-key.is-loaded { background: color-mix(in srgb, currentColor 22%, #fff); }
+    .field-kb-key--black.is-loaded { background: #2a2a2a; box-shadow: inset 0 -2px 0 color-mix(in srgb, currentColor 35%, #555); }
+    .field-kb-key.is-selected { outline: 2px solid color-mix(in srgb, currentColor 70%, #000); outline-offset: 1px; z-index: 2; }
+    .field-kb-key.is-pressed { transform: translateY(1px); filter: brightness(0.92); }
+    .field-kb-key.is-empty { opacity: 0.28; pointer-events: none; }
+
+    /* legacy aliases */
+    .opxy-field-keyboard, .play-keyboard { display: flex; justify-content: center; gap: 8px; user-select: none; }
+    .pad-grid { display: none; }
+
+    /* OP-XY drum kit editor */
+    .drum-editor {
+      display: flex;
+      flex-direction: column;
+      min-height: 360px;
+      height: 100%;
+      margin: calc(var(--grid) * -2) calc(var(--grid) * -3) calc(var(--grid) * -3);
+    }
+    .drum-editor-top {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+    .drum-editor-top .segments { margin: 0; }
+    .drum-editor-panel {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+    }
+    .drum-editor-keyboard {
+      flex-shrink: 0;
+      border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: color-mix(in srgb, currentColor 6%, transparent);
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3) calc(var(--grid) * 3);
+    }
+    .drum-pad-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--grid) * 2);
+      margin-bottom: calc(var(--grid) * 2);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .drum-pad-nav button {
+      width: 32px;
+      height: 28px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    .drum-pad-nav button:hover { opacity: 1; }
+    .drum-pad-nav .pad-readout { min-width: 140px; text-align: center; opacity: 0.75; }
+
+    /* drum kit editor panels — keyboard uses .field-keyboard */
+    .sound-browser {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--grid) * 2);
+      min-height: 180px;
+    }
+    .sound-crumb {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.5;
+    }
+    .sound-crumb span { opacity: 0.35; }
+    .sound-browser-cols {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 1px;
+      min-height: 160px;
+      border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    }
+    .sound-col {
+      overflow: auto;
+      background: color-mix(in srgb, currentColor 4%, transparent);
+    }
+    .sound-col + .sound-col {
+      border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+    .sound-item {
+      display: block;
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 6%, transparent);
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      text-align: left;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    .sound-item:hover { opacity: 1; background: color-mix(in srgb, currentColor 6%, transparent); }
+    .sound-item.active { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
+    .sound-item.preview { opacity: 1; font-weight: 500; }
+    .sound-assign {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.55;
+      padding: calc(var(--grid) * 1) 0;
+    }
+
+    .drum-sample-edit {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--grid) * 2);
+    }
+    .drum-sample-edit .waveform-stub { height: 48px; margin: 0; }
+    .drum-sample-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.55;
+    }
+    .drum-sample-params {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: calc(var(--grid) * 2);
+    }
+    .drum-sample-params label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 10px;
+      opacity: 0.5;
+      text-transform: lowercase;
+    }
+    .drum-sample-params input,
+    .drum-sample-params select {
+      padding: 6px 8px;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: color-mix(in srgb, currentColor 4%, transparent);
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    #sub-edit:has(#editDrumSampler:not(.hidden)) {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 0;
+      margin: calc(var(--grid) * -2) calc(var(--grid) * -3) calc(var(--grid) * -3);
+    }
+    #editDrumSampler.drum-editor { margin: 0; }
+
+    /* drum pad grid (legacy fallback — hidden) */
+    .pad-grid { display: none; }
+    .impact-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 24px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin: calc(var(--grid) * 2) 0;
+    }
+    .impact-grid .k { opacity: 0.55; }
+
+    /* ── PROJECTS / ARRANGE ── */
+    .projects-workspace {
+      display: grid;
+      grid-template-columns: minmax(200px, 240px) 1fr;
+      gap: calc(var(--grid) * 3);
+      flex: 1;
+      min-height: 0;
+      margin-top: calc(var(--grid) * 2);
+    }
+    @media (max-width: 860px) {
+      .projects-workspace { grid-template-columns: 1fr; }
+    }
+    .projects-list-pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: #383d40;
+    }
+    .projects-list-pane .search { margin: calc(var(--grid) * 2); margin-bottom: calc(var(--grid) * 1); }
+    .projects-list-scroll {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+    }
+    .projects-list-scroll .row { padding-left: calc(var(--grid) * 2); padding-right: calc(var(--grid) * 2); }
+
+    .arrange-pane {
+      display: none;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid #1a1a1a;
+      background: #000;
+      color: var(--off-white);
+    }
+    .arrange-pane.visible { display: flex; }
+    .projects-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      opacity: 0.45;
+      font-size: 12px;
+      border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      background: #383d40;
+    }
+    .projects-empty.hidden { display: none; }
+
+    .arrange-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      background: #000;
+    }
+    .arrange-head .file-name {
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+    .arrange-head .file-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      opacity: 0.45;
+      margin-left: calc(var(--grid) * 2);
+    }
+    .arrange-scene-nav {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 2);
+    }
+    .arrange-scene-nav button {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #333;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 11px;
+      opacity: 0.75;
+    }
+    .arrange-scene-nav button:hover { opacity: 1; }
+    .scene-badge {
+      width: 52px;
+      height: 52px;
+      padding: 6px;
+      background: var(--off-white);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .scene-badge-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--black);
+      color: var(--off-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.04em;
+    }
+    .scene-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.45;
+    }
+
+    .arrange-grid-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .arrange-grid {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch;
+    }
+    .arrange-col {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--lane-bg, #555);
+      border-left: 1px solid #2a2a2a;
+    }
+    .arrange-col:first-child { border-left: none; }
+    .arrange-col.selected { --lane-bg: #fff; }
+
+    .pattern-lane {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .pattern-stack-viewport {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .pattern-stack {
+      display: flex;
+      flex-direction: column;
+      transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .pattern-stack.no-transition { transition: none !important; }
+    .pattern-cell {
+      height: 36px;
+      flex-shrink: 0;
+      border: none;
+      border-bottom: 1px solid #1a1a1a;
+      background: color-mix(in srgb, var(--lane-bg, #555) 82%, #000);
+      color: color-mix(in srgb, var(--lane-bg, #555) 20%, #fff);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 0;
+      transition: background var(--ease), color var(--ease);
+    }
+    .arrange-col.selected .pattern-cell {
+      background: color-mix(in srgb, #fff 88%, #ccc);
+      color: #333;
+    }
+    .pattern-cell.scene-active {
+      background: #fff;
+      color: #0a0a0a;
+      font-weight: 600;
+    }
+    .pattern-cell.focused {
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--off-white) 55%, transparent);
+    }
+    .arrange-col.selected .pattern-cell.scene-active {
+      background: #0a0a0a;
+      color: #fff;
+    }
+    .pattern-cell:hover { filter: brightness(1.12); }
+
+    .track-preset {
+      flex-shrink: 0;
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 1);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      line-height: 1.35;
+      text-align: center;
+      word-break: break-word;
+      min-height: 36px;
+      border-top: 1px solid #222;
+      background: #000;
+      color: color-mix(in srgb, var(--off-white) 72%, transparent);
+      cursor: pointer;
+    }
+    .track-preset:hover { color: var(--off-white); }
+    .track-preset.picker-target {
+      color: var(--off-white);
+      box-shadow: inset 0 -2px 0 var(--off-white);
+    }
+    .arrange-col.selected .track-preset {
+      background: #fff;
+      color: #0a0a0a;
+      border-top-color: #ddd;
+    }
+
+    .arrange-col.selected .track-preset.picker-target {
+      box-shadow: inset 0 -2px 0 #0a0a0a;
+    }
+
+    .arrange-toolbar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 3);
+      border-top: 1px solid #222;
+      background: #0a0a0a;
+      flex-wrap: wrap;
+    }
+    .arrange-toolbar-context {
+      font-size: 11px;
+      opacity: 0.55;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .arrange-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 3);
+      flex-shrink: 0;
+    }
+    .arrange-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 1);
+    }
+    .arrange-toolbar-label {
+      font-size: 10px;
+      text-transform: lowercase;
+      opacity: 0.4;
+      margin-right: calc(var(--grid) * 1);
+    }
+    .arrange-tool-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #333;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.75;
+    }
+    .arrange-tool-btn:hover:not(:disabled) { opacity: 1; border-color: #555; }
+    .arrange-tool-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+    .preset-picker {
+      flex-shrink: 0;
+      border-top: 1px solid #333;
+      background: #121212;
+      display: flex;
+      flex-direction: column;
+      max-height: 220px;
+      min-height: 180px;
+    }
+    .preset-picker.hidden { display: none; }
+    .preset-picker-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3) calc(var(--grid) * 1);
+      gap: calc(var(--grid) * 2);
+    }
+    .preset-picker-head span {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .preset-picker-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #333;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 12px;
+      opacity: 0.65;
+    }
+    .preset-picker-close:hover { opacity: 1; }
+    .preset-picker .search {
+      margin: 0 calc(var(--grid) * 3) calc(var(--grid) * 2);
+      background: #0a0a0a;
+      border-color: #333;
+      color: var(--off-white);
+    }
+    .preset-picker-list {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 0 calc(var(--grid) * 2) calc(var(--grid) * 2);
+    }
+    .preset-picker-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+      border: none;
+      border-bottom: 1px solid #1a1a1a;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--font-ui);
+      font-size: 12px;
+    }
+    .preset-picker-item:hover { background: #1a1a1a; }
+    .preset-picker-item.active { background: #fff; color: #0a0a0a; }
+    .preset-picker-item .type {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.45;
+    }
+    .preset-picker-item.active .type { opacity: 0.55; }
+
+    .arrange-foot {
+      flex-shrink: 0;
+      border-top: 1px solid #222;
+      background: #000;
+    }
+    .arrange-foot-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 3);
+      border: none;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      opacity: 0.5;
+    }
+    .arrange-foot-toggle:hover { opacity: 1; }
+    .arrange-refs {
+      max-height: 140px;
+      overflow: auto;
+      padding: 0 calc(var(--grid) * 3) calc(var(--grid) * 2);
+    }
+    .arrange-refs.hidden { display: none; }
+
+    .hidden { display: none !important; }
+
+    /* ── LIBRARY WORKSPACE (presets / samples) ── */
+    .library-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: calc(var(--grid) * 2);
+      margin-bottom: calc(var(--grid) * 2);
+      flex-shrink: 0;
+    }
+    .library-toolbar .segments { margin-bottom: 0; }
+    .library-toolbar .search {
+      flex: 1;
+      min-width: 180px;
+      max-width: 360px;
+      margin-bottom: 0;
+    }
+    .filter-toggles {
+      display: flex;
+      gap: calc(var(--grid) * 1);
+    }
+    .filter-toggle {
+      padding: 5px 10px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.55;
+    }
+    .filter-toggle.active {
+      opacity: 1;
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    .library-workspace {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) 1fr;
+      gap: calc(var(--grid) * 3);
+      flex: 1;
+      min-height: 0;
+    }
+    @media (max-width: 860px) {
+      .library-workspace { grid-template-columns: 1fr; }
+    }
+
+    .library-list-pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+    }
+    body.mode-presets .library-list-pane { background: #7a8083; }
+    body.mode-samples .library-list-pane { background: #d0d2d0; }
+
+    .library-list-scroll {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+    }
+    .library-list-scroll .row { padding-left: calc(var(--grid) * 2); padding-right: calc(var(--grid) * 2); }
+    .library-list-scroll .row .meta { font-size: 10px; opacity: 0.4; }
+    .list-toolbar { display: none; }
+    .row .dot-modified::before {
+      content: '●';
+      margin-right: 6px;
+      opacity: 0.7;
+    }
+    .row.unnamed .name { opacity: 0.72; font-style: italic; }
+
+    .library-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.45;
+      font-size: 12px;
+      border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+    body.mode-presets .library-empty { background: #7a8083; }
+    body.mode-samples .library-empty { background: #d0d2d0; }
+    .library-empty.hidden { display: none; }
+
+    .library-detail-pane {
+      display: none;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      overflow: hidden;
+    }
+    body.mode-presets .library-detail-pane { background: #868c8f; }
+    body.mode-samples .library-detail-pane { background: #dcdedcc; }
+    .library-detail-pane.visible { display: flex; }
+
+    .detail-head {
+      flex-shrink: 0;
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+    .detail-head-compact {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: calc(var(--grid) * 1) calc(var(--grid) * 2);
+      align-items: center;
+    }
+    .detail-head-compact h2 {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      grid-column: 1;
+    }
+    .detail-head-compact .detail-sub {
+      grid-column: 1;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.55;
+    }
+    .detail-head-compact .detail-nav { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+    .detail-head-compact .detail-actions {
+      grid-column: 1 / -1;
+      margin-top: calc(var(--grid) * 1);
+    }
+    .detail-head .breadcrumb { display: none; }
+    .detail-meta-line { display: none; }
+    .parsed-tags { display: none; }
+    .detail-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      flex-wrap: wrap;
+    }
+    .detail-title-row h2 {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+    .detail-nav {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 1);
+    }
+    .detail-nav button {
+      width: 28px;
+      height: 28px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .detail-nav button:disabled { opacity: 0.2; cursor: not-allowed; }
+    .detail-nav .pos { font-family: var(--font-mono); font-size: 10px; opacity: 0.45; min-width: 40px; text-align: center; }
+
+    .detail-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: calc(var(--grid) * 2) calc(var(--grid) * 3) calc(var(--grid) * 3);
+    }
+    .detail-submodes.segments { margin-bottom: calc(var(--grid) * 2); }
+
+    .region-table .row { grid-template-columns: 28px 44px 1fr 36px 40px 32px; }
+    .region-table .row .slot { font-family: var(--font-mono); font-size: 10px; opacity: 0.55; }
+    .region-table .row.unnamed .name { color: color-mix(in srgb, currentColor 65%, #c44); }
+
+    .edit-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      margin-bottom: calc(var(--grid) * 2);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.55;
+    }
+    .edit-synth-note {
+      padding: calc(var(--grid) * 3);
+      border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+      font-size: 12px;
+      opacity: 0.7;
+      line-height: 1.5;
+    }
+    .pad-grid .pad.loaded { opacity: 1; background: color-mix(in srgb, currentColor 14%, transparent); }
+    .pad-grid .pad.empty { opacity: 0.25; }
+
+    .waveform-stub {
+      height: 28px;
+      margin: calc(var(--grid) * 2) 0;
+      border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+      background:
+        repeating-linear-gradient(90deg,
+          color-mix(in srgb, currentColor 18%, transparent) 0 2px,
+          transparent 2px 6px);
+      opacity: 0.45;
+    }
+
+    .ref-links {
+      margin-top: calc(var(--grid) * 2);
+      border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      padding-top: calc(var(--grid) * 2);
+    }
+    .ref-links h4 { display: none; }
+    .ref-links .ref-row { padding-left: 0; padding-right: 0; }
+
+    .rename-inline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: calc(var(--grid) * 1);
+      align-items: center;
+      margin-top: calc(var(--grid) * 2);
+      padding: 0;
+      border: none;
+    }
+    .rename-inline label { display: none; }
+    .rename-inline input {
+      padding: 8px 10px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: color-mix(in srgb, currentColor 4%, transparent);
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .rename-queue-bar {
+      flex-shrink: 0;
+      border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+      padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--grid) * 2);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.55;
+    }
+    .rename-queue-bar p { margin: 0; }
+    .rename-queue-actions { display: flex; gap: calc(var(--grid) * 1); }
+    .rename-queue-actions button {
+      padding: 4px 8px;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: transparent;
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    .rename-queue-actions button.primary {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    .rename-queue-panel {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: color-mix(in srgb, #e8e9e7 92%, transparent);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-end;
+    }
+    .rename-queue-panel.hidden { display: none; }
+    .rename-queue-panel-inner {
+      width: min(480px, 100%);
+      border-left: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: #dcdedcc;
+      padding: calc(var(--grid) * 3);
+      overflow: auto;
+    }
+    #screen-samples { position: relative; }
+
+    .impact-slab {
+      margin-top: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 2);
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.75;
+    }
+    .impact-slab h3 { display: none; }
+    .impact-slab .impact-grid { display: block; }
+    .impact-slab .impact-grid .k { display: none; }
+    .impact-grid { display: none; }
+    .impact-slab.hidden { display: none; }
+
+    .detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: calc(var(--grid) * 1);
+      margin-top: calc(var(--grid) * 2);
+    }
+    .inline-action {
+      padding: 6px 12px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: color-mix(in srgb, currentColor 6%, transparent);
+      color: inherit;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    .inline-action:hover { opacity: 1; }
+    .inline-action.primary {
+      background: color-mix(in srgb, currentColor 14%, transparent);
+      opacity: 1;
+    }
+    .inline-action.icon {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .bulk-rename-block {
+      margin-bottom: calc(var(--grid) * 2);
+      padding-bottom: calc(var(--grid) * 2);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    }
+    .bulk-rename-block h4 { display: none; }
+    .bulk-rename-row {
+      display: flex;
+      gap: calc(var(--grid) * 2);
+      align-items: center;
+    }
+    .bulk-rename-row input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: color-mix(in srgb, currentColor 4%, transparent);
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .region-table .row {
+      grid-template-columns: 28px 48px 1fr 72px 56px 88px auto;
+      gap: calc(var(--grid) * 1);
+    }
+    .region-table .row .region-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+    .region-table .row .rename-input {
+      width: 100%;
+      padding: 4px 6px;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: color-mix(in srgb, currentColor 4%, transparent);
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+    .region-table .row .wave-mini {
+      height: 22px;
+      border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      opacity: 0.4;
+    }
+
+    .edit-workspace { display: flex; flex-direction: column; gap: calc(var(--grid) * 3); }
+    .edit-controls-row {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 1);
+      flex-wrap: wrap;
+    }
+    .edit-section {
+      border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      padding-top: calc(var(--grid) * 2);
+    }
+    .edit-section-head { display: none; }
+    .edit-fold {
+      border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    }
+    .edit-fold summary {
+      padding: calc(var(--grid) * 1.5) 0;
+      font-size: 10px;
+      text-transform: lowercase;
+      opacity: 0.45;
+      cursor: pointer;
+      list-style: none;
+    }
+    .edit-fold summary::-webkit-details-marker { display: none; }
+    .edit-fold[open] summary { opacity: 0.65; }
+    .edit-fold .settings-grid { padding-bottom: calc(var(--grid) * 2); }
+    .save-bar .mono { display: none; }
+    .save-bar { justify-content: flex-end; }
+    .edit-sample-table .row {
+      grid-template-columns: 40px 1fr 80px 72px;
+      font-size: 11px;
+    }
+    .edit-sample-table .wave-mini { height: 24px; border: 1px solid color-mix(in srgb, currentColor 10%, transparent); opacity: 0.4; }
+    .edit-foot-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: calc(var(--grid) * 1);
+      margin-top: calc(var(--grid) * 2);
+    }
+    .edit-foot-actions button {
+      padding: 6px 10px;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: transparent;
+      color: inherit;
+      font-size: 10px;
+      text-transform: lowercase;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: calc(var(--grid) * 2);
+    }
+    .settings-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 10px;
+      text-transform: lowercase;
+      opacity: 0.55;
+    }
+    .settings-grid select,
+    .settings-grid input {
+      padding: 6px 8px;
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: color-mix(in srgb, currentColor 4%, transparent);
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .save-bar {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 2);
+      padding: calc(var(--grid) * 2);
+      margin-top: calc(var(--grid) * 2);
+      border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+      background: color-mix(in srgb, currentColor 6%, transparent);
+    }
+    .save-bar .mono { flex: 1; font-size: 10px; opacity: 0.6; }
+    .save-bar button {
+      padding: 8px 14px;
+      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+      background: transparent;
+      font-size: 11px;
+      text-transform: lowercase;
+      cursor: pointer;
+    }
+    .save-bar button.primary { background: color-mix(in srgb, currentColor 14%, transparent); }
+
+    .zone-keyboard-stub { display: none; }
+
+    .parsed-tags {
+      font-size: 10px;
+      opacity: 0.5;
+      margin-top: calc(var(--grid) * 1);
+    }
+    .waveform-row {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--grid) * 2);
+      margin-bottom: calc(var(--grid) * 2);
+    }
+    .waveform-row .waveform-stub { flex: 1; margin: 0; height: 36px; }
+
+    .list-counter {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.45;
+      padding: calc(var(--grid) * 1) calc(var(--grid) * 2);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    }
+  </style>
+</head>
+<body class="mode-data">
+
+  <header class="status-strip">
+    <h1>op–xy mtp</h1>
+    <div class="status-strip-right">
+      <div class="segments header-seg" id="connectionToggle">
+        <button type="button" class="seg active" data-conn="connected">connected</button>
+        <button type="button" class="seg" data-conn="offline">offline</button>
+      </div>
+      <div class="meta mono" id="statusMeta">techno liveset</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="mode-viewport">
+      <div class="mode-track" id="modeTrack">
+
+    <!-- DATA MODE -->
+    <div class="mode-panel" data-mode="data">
+    <section class="screen" id="screen-data">
+      <div class="data-stack">
+        <div class="device-pane" id="devicePane">
+          <div class="pane-head">
+            <span class="title">op–xy</span>
+          </div>
+
+          <div class="device-body">
+            <div class="device-live-inner">
+              <div class="storage-block">
+                <div class="storage-head">
+                  <span class="label">8 gb</span>
+                  <span class="storage-total mono" id="deviceStorageTotal">7.4 gb · 0.6 free</span>
+                </div>
+                <div class="stacked-bar" id="deviceStackedBar"></div>
+                <div class="storage-legend">
+                  <span class="l-presets">presets · 2.1 gb</span>
+                  <span class="l-samples">samples · 3.2 gb</span>
+                  <span class="l-projects">projects · 0.4 gb</span>
+                  <span class="l-other">other · 1.7 gb</span>
+                  <span class="l-free">free · 0.6 gb</span>
+                </div>
+              </div>
+              <div class="pane-stats">
+                275 presets<br>
+                421 samples<br>
+                12 projects
+              </div>
+            </div>
+            <div class="device-offline-state" aria-hidden="true">
+              <object class="device-connect-art" type="image/svg+xml" data="connect_pc.html" aria-hidden="true"></object>
+              <p class="device-offline-hint">connect op–xy over usb</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="transfer-row">
+          <button type="button" class="data-btn" id="btnPull">
+            <svg viewBox="0 0 24 24"><path d="M12 5v12"/><path d="M8 13l4 4 4-4"/></svg>
+            <span>pull</span>
+          </button>
+          <button type="button" class="data-btn" id="btnShowPush">
+            <svg viewBox="0 0 24 24"><path d="M12 19V7"/><path d="M8 11l4-4 4 4"/></svg>
+            <span>push</span>
+          </button>
+        </div>
+
+        <div class="sets-pane" id="setsPane">
+          <div class="pane-head">
+            <span class="title">sets</span><span class="set-pane-name" id="setPaneName">techno liveset</span>
+          </div>
+          <div class="sets-body">
+          <div class="sets-carousel-wrap">
+            <div class="sets-viewport" id="setsViewport">
+              <div class="sets-track" id="setsTrack"></div>
+            </div>
+          </div>
+          <div class="history-panel hidden" id="historyPanel">
+            <div class="history-panel-head">
+              <span>history</span>
+              <span class="mono" id="historySetName">techno liveset</span>
+            </div>
+            <ul class="history-list" id="historyList"></ul>
+          </div>
+          </div>
+        </div>
+
+        <div class="sets-toolbar">
+          <div class="sets-toolbar-left">
+            <button type="button" class="data-btn" id="setPrev" aria-label="previous set">
+              <svg viewBox="0 0 24 24"><path d="M14 8l-4 4 4 4"/></svg>
+            </button>
+            <div class="set-dots" id="setDots" aria-label="sets"></div>
+            <button type="button" class="data-btn" id="setNext" aria-label="next set">
+              <svg viewBox="0 0 24 24"><path d="M10 8l4 4-4 4"/></svg>
+            </button>
+            <div class="sets-picker-wrap">
+              <button type="button" class="data-btn" id="setListBtn" aria-label="choose set">
+                <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+                <span>list</span>
+              </button>
+              <div class="sets-picker hidden" id="setsPicker"></div>
+            </div>
+          </div>
+          <div class="sets-toolbar-right">
+            <button type="button" class="data-btn" id="btnCommit">
+              <svg viewBox="0 0 24 24"><path d="M5 11h14v9H5z"/><path d="M7 11V9a5 5 0 0 1 10 0v2"/><circle cx="12" cy="15" r="1.5"/></svg>
+              <span>commit</span>
+            </button>
+            <button type="button" class="data-btn" id="btnHistory">
+              <svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="8"/></svg>
+              <span>history</span>
+            </button>
+            <button type="button" class="data-btn" id="btnSaveAs">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11"/><path d="M5 15V5h10"/></svg>
+              <span>save as</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="slab hidden" id="pushPreflight">
+        <h3>push</h3>
+        <p class="mono" id="pushSetName">techno liveset</p>
+        <div class="slab-actions">
+          <button type="button">review</button>
+          <button type="button" class="primary">push</button>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- PROJECTS MODE -->
+    <div class="mode-panel" data-mode="projects">
+    <section class="screen" id="screen-projects">
+      <div class="screen-title">projects</div>
+
+      <div class="projects-workspace">
+        <div class="projects-list-pane">
+          <input type="text" class="search" placeholder="search projects" />
+          <div class="projects-list-scroll" id="projectsList">
+            <div class="row" data-project="nt aeroplane live.xy"><span class="idx">01</span><span class="name">nt aeroplane live.xy</span><span class="meta">12 sc</span></div>
+            <div class="row" data-project="ambient sketch.xy"><span class="idx">02</span><span class="name">ambient sketch.xy</span><span class="meta">4 sc</span></div>
+            <div class="row" data-project="club tool 07.xy"><span class="idx">03</span><span class="name">club tool 07.xy</span><span class="meta">8 sc</span></div>
+            <div class="row" data-project="broken clouds.xy"><span class="idx">04</span><span class="name">broken clouds.xy</span><span class="meta">3 sc</span></div>
+          </div>
+        </div>
+
+        <div class="projects-empty" id="projectsEmpty">select a project</div>
+
+        <div class="arrange-pane" id="arrangePane">
+          <div class="arrange-head">
+            <div>
+              <span class="file-name" id="arrangeFileName">nt aeroplane live.xy</span>
+              <span class="file-meta mono" id="arrangeFileMeta">128 bpm · 12 scenes</span>
+            </div>
+            <div class="arrange-scene-nav">
+              <button type="button" id="scenePrev" aria-label="previous scene">◀</button>
+              <div class="scene-badge"><div class="scene-badge-inner" id="sceneBadge">1</div></div>
+              <button type="button" id="sceneNext" aria-label="next scene">▶</button>
+              <span class="scene-count mono" id="sceneCountLabel">1 / 12</span>
+            </div>
+          </div>
+
+          <div class="arrange-grid-wrap">
+            <div class="arrange-grid" id="arrangeGrid"></div>
+          </div>
+
+          <div class="arrange-toolbar" id="arrangeToolbar">
+            <span class="arrange-toolbar-context mono" id="arrangeContext">select a track · click preset to change sound</span>
+            <div class="arrange-toolbar-actions">
+              <div class="arrange-toolbar-group">
+                <span class="arrange-toolbar-label">pattern</span>
+                <button type="button" class="arrange-tool-btn" id="btnAddPattern" disabled title="new pattern on track">+</button>
+                <button type="button" class="arrange-tool-btn" id="btnRemovePattern" disabled title="remove last pattern">−</button>
+              </div>
+              <div class="arrange-toolbar-group">
+                <span class="arrange-toolbar-label">scene</span>
+                <button type="button" class="arrange-tool-btn" id="btnAddScene" title="new scene (copy current)">+</button>
+                <button type="button" class="arrange-tool-btn" id="btnRemoveScene" title="remove current scene">−</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="preset-picker hidden" id="presetPicker">
+            <div class="preset-picker-head">
+              <span class="mono" id="presetPickerTitle">t1 · p1 · preset</span>
+              <button type="button" class="preset-picker-close" id="presetPickerClose" aria-label="close preset picker">✕</button>
+            </div>
+            <input type="text" class="search" id="presetPickerSearch" placeholder="search presets" />
+            <div class="preset-picker-list" id="presetPickerList"></div>
+          </div>
+
+          <div class="arrange-foot">
+            <button type="button" class="arrange-foot-toggle" id="refsToggle">
+              <span id="refsToggleLabel">sample refs · 56 indexed · 1 missing</span>
+              <span>▼</span>
+            </button>
+            <div class="arrange-refs hidden" id="arrangeRefs">
+              <div class="ref-row"><span>kick clean c2 01.wav</span><span class="link" data-goto="presets" data-target="nt-aeroplane">found · drum/nt-aeroplane</span></div>
+              <div class="ref-row"><span>hat noise f#3 04.wav</span><span>missing</span></div>
+              <div class="ref-row"><span>texture long a2.wav</span><span class="link" data-goto="samples" data-target="field noise a2.wav">found · samples/user</span></div>
+              <div class="ref-row"><span>pluck beach bum.wav</span><span class="link" data-goto="presets" data-target="glass prism">found · prism/glass</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- PRESETS MODE -->
+    <div class="mode-panel mode-panel-presets" data-mode="presets">
+    <section class="screen" id="screen-presets">
+      <div class="screen-title">presets</div>
+      <div class="screen-headline" id="presetsHeadline"></div>
+
+      <div class="library-toolbar">
+        <div class="segments" id="presetFilters">
+          <button type="button" class="seg active" data-filter="all">all</button>
+          <button type="button" class="seg" data-filter="drum">drum</button>
+          <button type="button" class="seg" data-filter="synth">synth</button>
+          <button type="button" class="seg" data-filter="sampler">smpl</button>
+          <button type="button" class="seg" data-filter="multi">multi</button>
+        </div>
+        <div class="filter-toggles">
+          <button type="button" class="filter-toggle" id="presetUnnamedToggle" title="unnamed">?</button>
+          <button type="button" class="filter-toggle" id="presetModifiedToggle" title="modified">●</button>
+        </div>
+        <input type="text" class="search" id="presetSearch" placeholder="search" />
+      </div>
+
+      <div class="library-workspace">
+        <div class="library-list-pane">
+          <div class="list-toolbar"><span class="mono" id="presetsListCounter"></span></div>
+          <div class="library-list-scroll" id="presetsList"></div>
+        </div>
+
+        <div class="library-empty" id="presetsEmpty">—</div>
+
+        <div class="library-detail-pane" id="presetsDetailPane">
+          <div class="detail-head detail-head-compact">
+            <h2 id="detailTitle">clean kit</h2>
+            <div class="detail-sub mono" id="detailMeta">drum · 24</div>
+            <div class="detail-nav">
+              <button type="button" id="presetPrev" aria-label="previous">◀</button>
+              <span class="pos mono" id="presetPos">1/12</span>
+              <button type="button" id="presetNext" aria-label="next">▶</button>
+            </div>
+            <div class="detail-actions" id="presetDetailActions"></div>
+          </div>
+
+          <div class="detail-body">
+            <div class="segments detail-submodes" id="presetSubmodes">
+              <button type="button" class="seg active" data-sub="regions">list</button>
+              <button type="button" class="seg" data-sub="edit">edit</button>
+            </div>
+
+            <div id="sub-regions" class="sub-pane region-table">
+              <div class="field-keyboard field-keyboard--compact" id="previewPlayKeyboard"></div>
+              <div class="bulk-rename-block hidden" id="bulkRenameBlock">
+                <div class="bulk-rename-row">
+                  <input type="text" id="bulkRenameBase" placeholder="base name" />
+                  <button type="button" class="inline-action primary" id="bulkRenameBtn">fix all</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="sub-edit" class="sub-pane hidden">
+              <div id="editDrumSampler" class="edit-workspace drum-editor hidden">
+                <div class="drum-editor-top">
+                  <div class="segments" id="drumEditorModes">
+                    <button type="button" class="seg active" data-drum-mode="pick">sound</button>
+                    <button type="button" class="seg" data-drum-mode="sample-edit">edit</button>
+                  </div>
+                  <span class="mono" style="font-size:10px;opacity:0.4" id="drumEditorHint">hold key · sampler</span>
+                </div>
+                <div class="drum-editor-panel">
+                  <div id="drumPickPanel" class="sound-browser">
+                    <div class="sound-crumb mono" id="soundCrumb"><span>type</span> kick</div>
+                    <div class="sound-browser-cols">
+                      <div class="sound-col" id="soundTypeCol"></div>
+                      <div class="sound-col" id="soundListCol"></div>
+                    </div>
+                    <div class="sound-assign" id="soundAssign">kd1 · kick clean c2 01.wav</div>
+                  </div>
+                  <div id="drumSampleEditPanel" class="drum-sample-edit hidden">
+                    <div class="drum-sample-meta mono" id="drumEditMeta">kd1 · kick clean c2 01.wav · 00:01.2</div>
+                    <div class="waveform-stub"></div>
+                    <div class="drum-sample-params">
+                      <label>trim start<input type="text" value="0 ms" /></label>
+                      <label>trim end<input type="text" value="1200 ms" /></label>
+                      <label>gain<input type="text" value="0 db" /></label>
+                      <label>pan<input type="text" value="0" /></label>
+                      <label>reverse<select><option>off</option><option>on</option></select></label>
+                      <label>transpose<input type="text" value="0" /></label>
+                    </div>
+                    <div class="save-bar" style="margin-top:8px">
+                      <button type="button">revert</button>
+                      <button type="button" class="primary">save sample</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="drum-editor-keyboard">
+                  <div class="drum-pad-nav">
+                    <button type="button" id="drumPadPrev" aria-label="previous pad">←</button>
+                    <span class="pad-readout mono" id="drumPadReadout">kd1 · 01 · kick</span>
+                    <button type="button" id="drumPadNext" aria-label="next pad">→</button>
+                  </div>
+                  <div class="field-keyboard" id="opxyFieldKeyboard" data-field-keyboard="drum"></div>
+                </div>
+              </div>
+              <div id="editMultisample" class="edit-workspace hidden">
+                <div class="edit-controls-row">
+                  <button type="button" class="filter-toggle" data-edit-toggle="midi">midi</button>
+                  <button type="button" class="filter-toggle" data-edit-toggle="pin">pin</button>
+                </div>
+                <div class="field-keyboard" id="multiPlayKeyboard" data-field-keyboard="multi"></div>
+                <div class="edit-section">
+                  <div class="edit-sample-table" id="editZoneTable"></div>
+                  <div class="edit-foot-actions">
+                    <button type="button">+</button>
+                    <button type="button">rec</button>
+                    <button type="button">clear</button>
+                  </div>
+                </div>
+                <details class="edit-fold">
+                  <summary>settings</summary>
+                  <div class="settings-grid">
+                    <label>play<select><option>poly</option></select></label>
+                    <label>trans<input type="text" value="0" /></label>
+                    <label>port<input type="text" value="0" /></label>
+                    <label>root<select><option>C</option></select></label>
+                  </div>
+                </details>
+                <details class="edit-fold">
+                  <summary>advanced</summary>
+                  <div class="settings-grid">
+                    <label>a<input type="text" value="0" /></label>
+                    <label>d<input type="text" value="120" /></label>
+                    <label>s<input type="text" value="80" /></label>
+                    <label>r<input type="text" value="240" /></label>
+                  </div>
+                </details>
+                <div class="save-bar">
+                  <button type="button">reset</button>
+                  <button type="button" class="primary">save</button>
+                </div>
+              </div>
+              <div id="editSynth" class="edit-synth-note hidden">catalog · read only</div>
+            </div>
+
+            <div class="impact-slab hidden" id="presetRenameImpact">
+              <span id="presetImpactText">2 presets · 3 projects</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- SAMPLES MODE -->
+    <div class="mode-panel mode-panel-samples" data-mode="samples">
+    <section class="screen" id="screen-samples">
+      <div class="screen-title">samples</div>
+      <div class="screen-headline" id="samplesHeadline"></div>
+
+      <div class="library-toolbar">
+        <div class="segments" id="sampleFilters">
+          <button type="button" class="seg active" data-filter="all">all</button>
+          <button type="button" class="seg" data-filter="user">user</button>
+          <button type="button" class="seg" data-filter="linked">used</button>
+          <button type="button" class="seg" data-filter="unused">free</button>
+          <button type="button" class="seg" data-filter="missing">!</button>
+        </div>
+        <div class="filter-toggles">
+          <button type="button" class="filter-toggle" id="sampleUnnamedToggle" title="unnamed">?</button>
+        </div>
+        <input type="text" class="search" id="sampleSearch" placeholder="search" />
+      </div>
+
+      <div class="library-workspace">
+        <div class="library-list-pane">
+          <div class="list-toolbar"><span class="mono" id="samplesListCounter"></span></div>
+          <div class="library-list-scroll" id="samplesList"></div>
+          <div class="rename-queue-bar">
+            <p><span id="queueCount">37</span> ?</p>
+            <div class="rename-queue-actions">
+              <button type="button" id="btnReviewQueue">review</button>
+              <button type="button" class="primary" id="btnShowRename">fix</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="library-empty" id="samplesEmpty">—</div>
+
+        <div class="library-detail-pane" id="samplesDetailPane">
+          <div class="detail-head detail-head-compact">
+            <h2 id="sampleDetailTitle" class="mono">field noise a2.wav</h2>
+            <div class="detail-sub mono" id="sampleDetailMeta">user · 00:04 · wav</div>
+            <div class="detail-actions" id="sampleDetailActions">
+              <button type="button" class="inline-action icon" title="play">▶</button>
+              <button type="button" class="inline-action icon" title="folder">↗</button>
+            </div>
+          </div>
+
+          <div class="detail-body">
+            <div class="waveform-stub" aria-hidden="true"></div>
+
+            <div class="rename-inline" id="sampleRenameBar">
+              <input type="text" id="sampleRenameInput" placeholder="name" />
+              <button type="button" class="inline-action" id="sampleRenameApply">save</button>
+            </div>
+
+            <div class="impact-slab hidden" id="renameImpact">
+              <span id="impactAffected">2 presets · 3 projects</span>
+              <div class="slab-actions" style="margin-top:10px"><button type="button" class="primary" id="impactApply">ok</button></div>
+            </div>
+
+            <div class="ref-links">
+              <div id="sampleRefList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rename-queue-panel hidden" id="renameQueuePanel">
+        <div class="rename-queue-panel-inner">
+          <div class="detail-title-row">
+            <h2>queue</h2>
+            <button type="button" class="inline-action" id="closeRenameQueue">×</button>
+          </div>
+          <div class="edit-sample-table" id="renameQueueTable"></div>
+          <div class="slab-actions" style="margin-top:16px">
+            <button type="button" id="queueDiscard">×</button>
+            <button type="button" class="primary" id="queueApplyAll">apply</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+      </div>
+    </div>
+  </main>
+
+  <nav class="mode-tabs">
+    <button type="button" class="mode-tab active" data-mode="data">data</button>
+    <button type="button" class="mode-tab" data-mode="projects">proj</button>
+    <button type="button" class="mode-tab" data-mode="presets">pre</button>
+    <button type="button" class="mode-tab" data-mode="samples">smp</button>
+  </nav>
+
+  <script>
+    const DEVICE_GB = 8;
+    const DEVICE_USAGE = { presets: 2.1, samples: 3.2, projects: 0.4, other: 1.7 };
+    const SETS = [
+      {
+        name: 'techno liveset',
+        commits: ['initial pull', 'after preset edits', 'pre-gig snapshot', 'post-gig', 'current'],
+        usage: { presets: 1.4, samples: 2.1, projects: 0.2, other: 0.1 },
+        stats: '198 presets · 312 samples · 8 projects',
+        lastPushed: true,
+      },
+      {
+        name: 'dnb session',
+        commits: ['initial pull', 'break edits', 'current'],
+        usage: { presets: 1.8, samples: 2.6, projects: 0.3, other: 0.1 },
+        stats: '241 presets · 388 samples · 11 projects',
+        lastPushed: false,
+      },
+      {
+        name: 'studio master',
+        commits: ['full mirror', 'sample cleanup', 'preset pass', 'current'],
+        usage: { presets: 2.0, samples: 3.0, projects: 0.35, other: 0.15 },
+        stats: '275 presets · 421 samples · 12 projects',
+        lastPushed: false,
+      },
+    ];
+
+    function setDotsHtml() {
+      return SETS.map((_, i) => `<i class="${i === setIndex ? 'on' : ''}"></i>`).join('');
+    }
+
+    function buildSetSlide(set, i) {
+      const slide = document.createElement('div');
+      slide.className = 'set-slide';
+      slide.dataset.index = String(i);
+      const { used, free } = renderStackedBar(document.createElement('div'), set.usage, DEVICE_GB);
+      slide.innerHTML = `
+        <div class="set-live-inner">
+          <div class="storage-block">
+            <div class="storage-head">
+              <span class="label">8 gb</span>
+              <span class="storage-total mono">${used.toFixed(1)} gb · ${free.toFixed(1)} free</span>
+            </div>
+            <div class="stacked-bar set-bar"></div>
+            <div class="storage-legend">
+              <span class="l-presets">presets · ${set.usage.presets} gb</span>
+              <span class="l-samples">samples · ${set.usage.samples} gb</span>
+              <span class="l-projects">projects · ${set.usage.projects} gb</span>
+              <span class="l-other">other · ${set.usage.other} gb</span>
+              <span class="l-free">free · ${free.toFixed(1)} gb</span>
+            </div>
+          </div>
+          <div class="pane-stats">${set.stats.replace(/ · /g, '<br>')}</div>
+        </div>`;
+      renderStackedBar(slide.querySelector('.stacked-bar'), set.usage, DEVICE_GB);
+      return slide;
+    }
+
+    function renderStackedBar(container, usage, maxGb) {
+      const used = usage.presets + usage.samples + usage.projects + usage.other;
+      const free = Math.max(0, maxGb - used);
+      const pct = (v) => (v / maxGb) * 100;
+      container.innerHTML = `
+        <div class="stack-seg presets" style="width:${pct(usage.presets)}%"></div>
+        <div class="stack-seg samples" style="width:${pct(usage.samples)}%"></div>
+        <div class="stack-seg projects" style="width:${pct(usage.projects)}%"></div>
+        <div class="stack-seg other" style="width:${pct(usage.other)}%"></div>
+        <div class="stack-seg free"></div>`;
+      return { used, free };
+    }
+
+    let setIndex = 0;
+    let deviceConnected = true;
+    let historyOpen = false;
+    const setsTrack = document.getElementById('setsTrack');
+    const setsViewport = document.getElementById('setsViewport');
+    const setDots = document.getElementById('setDots');
+    const setsPicker = document.getElementById('setsPicker');
+    const historyPanel = document.getElementById('historyPanel');
+    const historyList = document.getElementById('historyList');
+    SETS.forEach((s, i) => setsTrack.appendChild(buildSetSlide(s, i)));
+
+    function renderSetsPicker() {
+      setsPicker.innerHTML = SETS.map((s, i) =>
+        `<button type="button" data-set="${i}" class="${i === setIndex ? 'active' : ''}">${s.name}</button>`
+      ).join('');
+      setsPicker.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setIndex = Number(btn.dataset.set);
+          setsPicker.classList.add('hidden');
+          layoutSetsCarousel();
+        });
+      });
+    }
+
+    function renderHistoryList() {
+      const s = SETS[setIndex];
+      document.getElementById('historySetName').textContent = s.name;
+      historyList.innerHTML = s.commits.map((label, i) =>
+        `<li class="${i === s.commits.length - 1 ? 'current' : ''}">${label}</li>`
+      ).join('');
+    }
+
+    function layoutSetsCarousel() {
+      const vw = setsViewport.offsetWidth;
+      const slideW = vw;
+      const slides = setsTrack.querySelectorAll('.set-slide');
+      slides.forEach((sl, i) => {
+        sl.style.width = `${slideW}px`;
+        sl.classList.toggle('active', i === setIndex);
+      });
+      document.getElementById('setsPane').classList.toggle('on-device', SETS[setIndex].lastPushed);
+      setsTrack.style.transform = `translateX(${-setIndex * slideW}px)`;
+      const s = SETS[setIndex];
+      setDots.innerHTML = setDotsHtml();
+      document.getElementById('pushSetName').textContent = s.name;
+      document.getElementById('setPaneName').textContent = s.name;
+      document.getElementById('statusMeta').textContent = s.name;
+      renderSetsPicker();
+      renderHistoryList();
+    }
+
+    function setConnection(connected) {
+      deviceConnected = connected;
+      const pane = document.getElementById('devicePane');
+      pane.classList.toggle('offline', !connected);
+      pane.querySelector('.device-offline-state')?.setAttribute('aria-hidden', connected ? 'true' : 'false');
+      document.querySelectorAll('#connectionToggle .seg').forEach(b => {
+        b.classList.toggle('active', (b.dataset.conn === 'connected') === connected);
+      });
+      document.getElementById('btnPull').disabled = !connected;
+      document.getElementById('btnShowPush').disabled = !connected;
+    }
+
+    document.getElementById('setPrev').addEventListener('click', () => {
+      setIndex = (setIndex - 1 + SETS.length) % SETS.length;
+      layoutSetsCarousel();
+    });
+    document.getElementById('setNext').addEventListener('click', () => {
+      setIndex = (setIndex + 1) % SETS.length;
+      layoutSetsCarousel();
+    });
+    document.getElementById('setListBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      setsPicker.classList.toggle('hidden');
+    });
+    document.addEventListener('click', () => setsPicker.classList.add('hidden'));
+
+    document.getElementById('btnCommit').addEventListener('click', () => {
+      const s = SETS[setIndex];
+      const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (s.commits[s.commits.length - 1] === 'current') {
+        s.commits.splice(s.commits.length - 1, 0, stamp);
+      } else {
+        s.commits.push(stamp, 'current');
+      }
+      renderHistoryList();
+    });
+
+    document.getElementById('btnHistory').addEventListener('click', () => {
+      historyOpen = !historyOpen;
+      historyPanel.classList.toggle('hidden', !historyOpen);
+      document.getElementById('btnHistory').classList.toggle('active', historyOpen);
+      if (historyOpen) layoutSetsCarousel();
+    });
+
+    document.getElementById('btnSaveAs').addEventListener('click', () => {
+      const base = SETS[setIndex];
+      const copy = structuredClone(base);
+      copy.name = base.name + ' copy';
+      copy.lastPushed = false;
+      copy.commits = ['save as', 'current'];
+      SETS.push(copy);
+      setIndex = SETS.length - 1;
+      const slide = buildSetSlide(copy, setIndex);
+      setsTrack.appendChild(slide);
+      layoutSetsCarousel();
+    });
+
+    window.addEventListener('resize', layoutSetsCarousel);
+
+    const deviceBar = document.getElementById('deviceStackedBar');
+    const deviceTotals = renderStackedBar(deviceBar, DEVICE_USAGE, DEVICE_GB);
+    document.getElementById('deviceStorageTotal').textContent =
+      `${deviceTotals.used.toFixed(1)} gb · ${deviceTotals.free.toFixed(1)} free`;
+
+    document.querySelectorAll('#connectionToggle .seg').forEach(btn => {
+      btn.addEventListener('click', () => setConnection(btn.dataset.conn === 'connected'));
+    });
+
+    setIndex = SETS.findIndex(s => s.lastPushed);
+    if (setIndex < 0) setIndex = 0;
+    layoutSetsCarousel();
+    setConnection(true);
+
+    const PAD_LABELS = ['kd1','kd2','sd1','sd2','rim','clp','tb','sh','ch','cl1','oh','cab','lt1','rd','mt','cr','ht','cb','tri','lt2','lc','ws','hc','gui'];
+
+    /* ── Field keyboard (F-root, two octaves, OP-XY layout) ──
+       Bottom row naturals from F: z x c v b n m  (F G A B C D E)
+       Top row sharps: s d f h j  — s,d,f = F# G# A# (d/3 narrow = G#)
+       Upper octave: q w e r t y u / 2 3 4 6 7
+    */
+    const FIELD_KB_BASE_MIDI = 53;
+    const FIELD_KB_LAYOUT = [
+      {
+        top: [
+          { key: 's', semi: 1, narrow: false },
+          { key: 'd', semi: 3, narrow: true },
+          { key: 'f', semi: 5, narrow: false },
+          { key: 'h', semi: 8, narrow: false },
+          { key: 'j', semi: 10, narrow: false },
+        ],
+        bottom: [
+          { key: 'z', semi: 0 }, { key: 'x', semi: 2 }, { key: 'c', semi: 4 },
+          { key: 'v', semi: 6 }, { key: 'b', semi: 7 }, { key: 'n', semi: 9 }, { key: 'm', semi: 11 },
+        ],
+      },
+      {
+        top: [
+          { key: '2', semi: 1, narrow: false },
+          { key: '3', semi: 3, narrow: true },
+          { key: '4', semi: 5, narrow: false },
+          { key: '6', semi: 8, narrow: false },
+          { key: '7', semi: 10, narrow: false },
+        ],
+        bottom: [
+          { key: 'q', semi: 0 }, { key: 'w', semi: 2 }, { key: 'e', semi: 4 },
+          { key: 'r', semi: 6 }, { key: 't', semi: 7 }, { key: 'y', semi: 9 }, { key: 'u', semi: 11 },
+        ],
+      },
+    ];
+    const fieldKbKeyIndex = {};
+    FIELD_KB_LAYOUT.forEach((oct, octIdx) => {
+      [...oct.top, ...oct.bottom].forEach(k => {
+        fieldKbKeyIndex[k.key] = { oct: octIdx, semi: k.semi, pad: octIdx * 12 + k.semi };
+      });
+    });
+
+    let audioCtx = null;
+    const fieldKbInstances = new Map();
+    let fieldKbActiveId = null;
+    let previewKb = null;
+    let multiKb = null;
+    let drumKb = null;
+
+    function playFieldNote(midi, wave = 'triangle', dur = 0.1) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = wave;
+      osc.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur + 0.05);
+    }
+
+    function isTypingTarget() {
+      const el = document.activeElement;
+      return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
+    }
+
+    function createFieldKeyboard(container, options = {}) {
+      if (typeof container === 'string') container = document.getElementById(container);
+      if (!container) return null;
+      const id = options.id || container.id || ('fk-' + fieldKbInstances.size);
+      const instance = {
+        id,
+        el: container,
+        options: {
+          compact: false,
+          captureKeys: false,
+          baseMidi: FIELD_KB_BASE_MIDI,
+          onPress: null,
+          getKeyState: null,
+          ...options,
+        },
+      };
+      container.classList.add('field-keyboard');
+      if (instance.options.compact) container.classList.add('field-keyboard--compact');
+      container.dataset.fieldKeyboard = id;
+
+      instance._createKeyEl = function(octIdx, k, isBlack) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'field-kb-key field-kb-key--' + (isBlack ? 'black' : 'white');
+        if (isBlack && k.narrow) btn.classList.add('field-kb-key--narrow');
+        btn.dataset.oct = String(octIdx);
+        btn.dataset.semi = String(k.semi);
+        btn.dataset.key = k.key;
+        btn.dataset.pad = String(octIdx * 12 + k.semi);
+        const tag = document.createElement('span');
+        tag.className = 'key-tag';
+        btn.appendChild(tag);
+        const ch = document.createElement('span');
+        ch.className = 'key-char';
+        ch.textContent = k.key;
+        btn.appendChild(ch);
+        btn.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          instance.press(octIdx, k.semi, k.key);
+        });
+        return btn;
+      };
+
+      instance.build = function() {
+        container.innerHTML = '';
+        FIELD_KB_LAYOUT.forEach((octDef, octIdx) => {
+          const octEl = document.createElement('div');
+          octEl.className = 'field-kb-octave';
+          const topRow = document.createElement('div');
+          topRow.className = 'field-kb-row field-kb-row-top';
+          octDef.top.forEach(k => topRow.appendChild(instance._createKeyEl(octIdx, k, true)));
+          const botRow = document.createElement('div');
+          botRow.className = 'field-kb-row field-kb-row-bottom';
+          octDef.bottom.forEach(k => botRow.appendChild(instance._createKeyEl(octIdx, k, false)));
+          octEl.appendChild(topRow);
+          octEl.appendChild(botRow);
+          container.appendChild(octEl);
+        });
+        instance.refresh();
+      };
+
+      instance.press = function(octIdx, semi, keyChar) {
+        const pad = octIdx * 12 + semi;
+        const midi = instance.options.baseMidi + octIdx * 12 + semi;
+        if (instance.options.onPress) {
+          instance.options.onPress({ octIdx, semi, pad, midi, key: keyChar, kb: instance });
+        } else {
+          playFieldNote(midi);
+        }
+        instance.flash(octIdx, semi);
+      };
+
+      instance.flash = function(octIdx, semi, ms = 90) {
+        container.querySelectorAll(`.field-kb-key[data-oct="${octIdx}"][data-semi="${semi}"]`).forEach(el => {
+          el.classList.add('is-pressed');
+          setTimeout(() => el.classList.remove('is-pressed'), ms);
+        });
+      };
+
+      instance.refresh = function() {
+        if (!instance.options.getKeyState) return;
+        container.querySelectorAll('.field-kb-key').forEach(el => {
+          const oct = Number(el.dataset.oct);
+          const semi = Number(el.dataset.semi);
+          const pad = Number(el.dataset.pad);
+          const st = instance.options.getKeyState(oct, semi, pad) || {};
+          el.classList.toggle('is-loaded', !!st.loaded);
+          el.classList.toggle('is-empty', !!st.empty);
+          el.classList.toggle('is-selected', !!st.selected);
+          const tag = el.querySelector('.key-tag');
+          if (tag) tag.textContent = st.tag || '';
+        });
+      };
+
+      instance.setActive = function(on) {
+        instance.options.captureKeys = on;
+        if (on) fieldKbActiveId = id;
+        else if (fieldKbActiveId === id) fieldKbActiveId = null;
+      };
+
+      instance.build();
+      fieldKbInstances.set(id, instance);
+      return instance;
+    }
+
+    function dispatchFieldKey(keyChar) {
+      const info = fieldKbKeyIndex[keyChar];
+      if (!info) return false;
+      const inst = fieldKbActiveId ? fieldKbInstances.get(fieldKbActiveId) : null;
+      if (!inst || !inst.options.captureKeys) return false;
+      inst.press(info.oct, info.semi, keyChar);
+      return true;
+    }
+
+    function setActiveFieldKeyboard(id) {
+      fieldKbInstances.forEach((inst, iid) => inst.setActive(iid === id));
+    }
+
+    const DRUM_SOUND_LIBRARY = {
+      kick: { acoustic: ['tight 01', 'boom 02', 'clean c2'], electronic: ['808 sub', '909 punch'] },
+      snare: { acoustic: ['dry 01', 'room 02'], electronic: ['909 snap', 'clap layer'] },
+      hihat: { closed: ['tight', 'loose', 'noise'], open: ['bright', 'washy'] },
+      perc: { hand: ['clap', 'rim'], tom: ['low', 'mid', 'high'], ethnic: ['conga', 'shaker'] },
+      cymbal: { crash: ['short', 'long'], ride: ['thin', 'heavy'], fx: ['splash', 'china'] },
+    };
+    let drumPadSamples = {};
+    let drumSelectedPad = 0;
+    let drumEditorMode = 'pick';
+    let drumPickType = 'kick';
+    let drumPickCategory = null;
+    let drumPickSound = null;
+
+    function drumKeyState(oct, semi, pad) {
+      const preset = MOCK_PRESETS.find(p => p.id === selectedPresetId);
+      const loaded = preset && pad < (preset.loadedPads || 0);
+      return {
+        loaded,
+        empty: !loaded,
+        selected: pad === drumSelectedPad,
+        tag: PAD_LABELS[pad] || '',
+      };
+    }
+
+    function previewKeyState(oct, semi, pad) {
+      const preset = MOCK_PRESETS.find(p => p.id === selectedPresetId);
+      if (!preset || preset.type === 'drum') {
+        const loaded = preset && pad < (preset.loadedPads || 0);
+        return { loaded, empty: !loaded, selected: false, tag: PAD_LABELS[pad] || '' };
+      }
+      const loaded = semi < Math.min(preset.regionList?.length || 0, 12) && oct === 0;
+      return { loaded, empty: !loaded, selected: false, tag: '' };
+    }
+
+    function multiKeyState(oct, semi, pad) {
+      const preset = MOCK_PRESETS.find(p => p.id === selectedPresetId);
+      const idx = oct * 12 + semi;
+      const loaded = preset && idx < (preset.regionList?.length || 0);
+      return { loaded, empty: !loaded, selected: false, tag: '' };
+    }
+
+    function handleDrumPadPress(padIdx) {
+      if (drumEditorMode === 'pick' && drumPickType && drumPickCategory && drumPickSound) {
+        assignSoundToPad(padIdx, drumPickType, drumPickCategory, drumPickSound);
+      }
+      selectDrumPad(padIdx, { play: false });
+      playDrumPad(padIdx);
+    }
+
+    function initFieldKeyboards() {
+      previewKb = createFieldKeyboard('previewPlayKeyboard', {
+        id: 'preview',
+        compact: true,
+        getKeyState: previewKeyState,
+        onPress: ({ pad, midi }) => {
+          const p = MOCK_PRESETS.find(x => x.id === selectedPresetId);
+          if (!p) return;
+          if (p.type === 'drum') handleDrumPadPress(pad);
+          else playFieldNote(midi, 'sine', 0.28);
+        },
+      });
+      multiKb = createFieldKeyboard('multiPlayKeyboard', {
+        id: 'multi',
+        getKeyState: multiKeyState,
+        onPress: ({ midi }) => playFieldNote(midi, 'sine', 0.28),
+      });
+      drumKb = createFieldKeyboard('opxyFieldKeyboard', {
+        id: 'drum',
+        getKeyState: drumKeyState,
+        onPress: ({ pad }) => handleDrumPadPress(pad),
+      });
+    }
+
+    function refreshFieldKeyboards() {
+      const p = MOCK_PRESETS.find(x => x.id === selectedPresetId);
+      const previewEl = document.getElementById('previewPlayKeyboard');
+      if (previewEl) {
+        const showPreview = p && p.sampleBased && presetSubmode === 'regions';
+        previewEl.style.display = showPreview ? '' : 'none';
+      }
+      previewKb?.refresh();
+      multiKb?.refresh();
+      drumKb?.refresh();
+      updateDrumPadReadout();
+      if (currentMode !== 'presets' || !p) {
+        setActiveFieldKeyboard(null);
+        return;
+      }
+      if (presetSubmode === 'edit' && p.type === 'drum') setActiveFieldKeyboard('drum');
+      else if (presetSubmode === 'edit' && (p.type === 'sampler' || p.type === 'multi')) setActiveFieldKeyboard('multi');
+      else if (presetSubmode === 'regions' && p.sampleBased) setActiveFieldKeyboard('preview');
+      else setActiveFieldKeyboard(null);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (isTypingTarget()) return;
+      if (e.repeat) return;
+      const k = e.key.length === 1 ? e.key.toLowerCase() : null;
+      if (!k) return;
+      if (currentMode === 'presets' && dispatchFieldKey(k)) e.preventDefault();
+    });
+
+    function initDrumPadSamples(preset) {
+      drumPadSamples = {};
+      (preset.regionList || []).forEach((r, i) => {
+        if (i < 24) drumPadSamples[i] = { name: r.sample, type: r.slot.includes('kick') || i < 2 ? 'kick' : 'snare' };
+      });
+      for (let i = 0; i < (preset.loadedPads || 0); i++) {
+        if (!drumPadSamples[i]) {
+          drumPadSamples[i] = { name: `${PAD_LABELS[i]} placeholder.wav`, type: 'perc' };
+        }
+      }
+    }
+
+    function getDrumPadSample(padIdx) {
+      return drumPadSamples[padIdx] || null;
+    }
+
+    function selectDrumPad(padIdx, opts = {}) {
+      const preset = MOCK_PRESETS.find(p => p.id === selectedPresetId);
+      if (!preset || padIdx < 0 || padIdx > 23) return;
+      drumSelectedPad = padIdx;
+      const sample = getDrumPadSample(padIdx);
+      if (sample && !opts.skipBrowserSync) {
+        drumPickType = sample.type in DRUM_SOUND_LIBRARY ? sample.type : 'kick';
+        drumPickCategory = null;
+        drumPickSound = null;
+      }
+      refreshFieldKeyboards();
+      renderSoundBrowser();
+      renderDrumSampleEditPanel();
+      if (opts.play !== false) playDrumPad(padIdx);
+    }
+
+    function navigateDrumPad(delta) {
+      selectDrumPad((drumSelectedPad + delta + 24) % 24);
+    }
+
+    function playDrumPad(padIdx) {
+      const preset = MOCK_PRESETS.find(p => p.id === selectedPresetId);
+      if (!preset || padIdx >= (preset.loadedPads || 0)) return;
+      playFieldNote(FIELD_KB_BASE_MIDI + padIdx);
+      drumKb?.flash(Math.floor(padIdx / 12), padIdx % 12);
+    }
+
+    function assignSoundToPad(padIdx, type, category, sound) {
+      const name = `${type} ${category} ${sound}.wav`.replace(/\s+/g, ' ').trim();
+      drumPadSamples[padIdx] = { name, type, category, sound };
+      renderSoundBrowser();
+      refreshFieldKeyboards();
+      renderDrumSampleEditPanel();
+    }
+
+    function renderSoundBrowser() {
+      const typeCol = document.getElementById('soundTypeCol');
+      const listCol = document.getElementById('soundListCol');
+      const crumb = document.getElementById('soundCrumb');
+      const assign = document.getElementById('soundAssign');
+      if (!typeCol || !listCol) return;
+
+      typeCol.innerHTML = '';
+      Object.keys(DRUM_SOUND_LIBRARY).forEach(type => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sound-item' + (type === drumPickType ? ' active' : '');
+        btn.textContent = type;
+        btn.addEventListener('click', () => {
+          drumPickType = type;
+          drumPickCategory = null;
+          drumPickSound = null;
+          renderSoundBrowser();
+        });
+        typeCol.appendChild(btn);
+      });
+
+      listCol.innerHTML = '';
+      const cats = DRUM_SOUND_LIBRARY[drumPickType] || {};
+      if (!drumPickCategory) {
+        Object.keys(cats).forEach(cat => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'sound-item';
+          btn.textContent = cat;
+          btn.addEventListener('click', () => {
+            drumPickCategory = cat;
+            drumPickSound = null;
+            renderSoundBrowser();
+          });
+          listCol.appendChild(btn);
+        });
+        if (crumb) crumb.innerHTML = `<span>type</span> ${drumPickType}`;
+      } else {
+        (cats[drumPickCategory] || []).forEach(sound => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'sound-item' + (sound === drumPickSound ? ' preview' : '');
+          btn.textContent = sound;
+          btn.addEventListener('click', () => {
+            drumPickSound = sound;
+            if (drumEditorMode === 'pick') {
+              assignSoundToPad(drumSelectedPad, drumPickType, drumPickCategory, sound);
+            }
+            renderSoundBrowser();
+          });
+          listCol.appendChild(btn);
+        });
+        if (crumb) crumb.innerHTML = `<span>type</span> ${drumPickType} <span>›</span> ${drumPickCategory}`;
+      }
+
+      const cur = getDrumPadSample(drumSelectedPad);
+      if (assign) {
+        assign.textContent = cur
+          ? `${PAD_LABELS[drumSelectedPad]} · ${cur.name}`
+          : `${PAD_LABELS[drumSelectedPad]} · empty`;
+      }
+    }
+
+    function updateDrumPadReadout() {
+      const sample = getDrumPadSample(drumSelectedPad);
+      const readout = document.getElementById('drumPadReadout');
+      if (readout) {
+        readout.textContent = sample
+          ? `${PAD_LABELS[drumSelectedPad]} · ${String(drumSelectedPad + 1).padStart(2, '0')} · ${sample.name.replace(/\.wav$/, '')}`
+          : `${PAD_LABELS[drumSelectedPad]} · ${String(drumSelectedPad + 1).padStart(2, '0')} · empty`;
+      }
+    }
+
+    function renderDrumSampleEditPanel() {
+      const meta = document.getElementById('drumEditMeta');
+      const sample = getDrumPadSample(drumSelectedPad);
+      if (meta) {
+        meta.textContent = sample
+          ? `${PAD_LABELS[drumSelectedPad]} · ${sample.name} · 00:01.2`
+          : `${PAD_LABELS[drumSelectedPad]} · empty`;
+      }
+    }
+
+    function setDrumEditorMode(mode) {
+      drumEditorMode = mode;
+      document.querySelectorAll('#drumEditorModes .seg').forEach(b => {
+        b.classList.toggle('active', b.dataset.drumMode === mode);
+      });
+      document.getElementById('drumPickPanel').classList.toggle('hidden', mode !== 'pick');
+      document.getElementById('drumSampleEditPanel').classList.toggle('hidden', mode !== 'sample-edit');
+      document.getElementById('drumEditorHint').textContent =
+        mode === 'pick' ? 'pick sound · press key to assign' : 'edit sample · ← → switch pad';
+      renderSoundBrowser();
+      renderDrumSampleEditPanel();
+    }
+
+    function initDrumEditor(preset) {
+      if (!preset || preset.type !== 'drum') return;
+      initDrumPadSamples(preset);
+      drumSelectedPad = 0;
+      drumEditorMode = 'pick';
+      drumPickType = 'kick';
+      drumPickCategory = null;
+      drumPickSound = null;
+      setDrumEditorMode('pick');
+      selectDrumPad(0, { play: false, skipBrowserSync: true });
+    }
+
+    function initDrumEditorUI() {
+      document.querySelectorAll('#drumEditorModes .seg').forEach(btn => {
+        btn.addEventListener('click', () => setDrumEditorMode(btn.dataset.drumMode));
+      });
+      document.getElementById('drumPadPrev').addEventListener('click', () => navigateDrumPad(-1));
+      document.getElementById('drumPadNext').addEventListener('click', () => navigateDrumPad(1));
+    }
+
+    let currentMode = 'data';
+    let selectedPresetId = null;
+    let selectedRegionId = null;
+    let selectedSampleId = null;
+    let presetSubmode = 'regions';
+    let presetFilter = 'all';
+    let presetSearch = '';
+    let presetUnnamedOnly = false;
+    let presetModifiedOnly = false;
+    let sampleFilter = 'all';
+    let sampleSearch = '';
+    let sampleUnnamedOnly = false;
+    const presetCollapsedCategories = new Set();
+
+    function isCategoryCollapsed(cat, count) {
+      if (presetCollapsedCategories.has(cat)) return true;
+      if (presetCollapsedCategories.has('!' + cat)) return false;
+      if (count > 8 && selectedPresetId) {
+        const sel = MOCK_PRESETS.find(p => p.id === selectedPresetId);
+        if (sel && sel.category === cat) return false;
+      }
+      return count > 8;
+    }
+
+    function togglePresetCategory(cat) {
+      const filtered = getFilteredPresets();
+      const count = filtered.filter(p => p.category === cat).length;
+      const collapsed = isCategoryCollapsed(cat, count);
+      presetCollapsedCategories.delete(cat);
+      presetCollapsedCategories.delete('!' + cat);
+      presetCollapsedCategories.add(collapsed ? '!' + cat : cat);
+      renderPresetsList();
+    }
+
+    function collapseAllPresetCategories() {
+      const cats = [...new Set(getFilteredPresets().map(p => p.category))];
+      presetCollapsedCategories.clear();
+      cats.forEach(c => presetCollapsedCategories.add(c));
+      renderPresetsList();
+    }
+
+    function expandAllPresetCategories() {
+      presetCollapsedCategories.clear();
+      renderPresetsList();
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.body.className = 'mode-' + mode;
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.mode === mode);
+      });
+      const idx = MODE_ORDER.indexOf(mode);
+      document.getElementById('modeTrack').style.transform = `translateX(-${idx * 25}%)`;
+      if (mode === 'projects' && activeProjectId) {
+        setTimeout(() => {
+          updateArrangeGrid({ animateTracks: new Set() });
+        }, 340);
+      }
+      if (mode === 'samples' && !selectedSampleId && typeof getFilteredSamples === 'function') {
+        const first = getFilteredSamples()[0];
+        if (first) selectSample(first.id);
+      }
+      refreshFieldKeyboards();
+    }
+
+    const MODE_ORDER = ['data', 'projects', 'presets', 'samples'];
+    const PATTERN_CELL_H = 36;
+    const INST_TRACK_COUNT = 8;
+
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => setMode(tab.dataset.mode));
+    });
+
+    document.getElementById('btnShowPush').addEventListener('click', () => {
+      document.getElementById('pushPreflight').classList.toggle('hidden');
+    });
+
+    /* ── PROJECTS / ARRANGE (mock) ── */
+    function laneGrey(trackNum) {
+      const tones = [0.32, 0.40, 0.48, 0.56, 0.64, 0.72, 0.80, 0.88];
+      const t = tones[trackNum - 1] ?? 0.5;
+      const g = Math.round(t * 255);
+      return `rgb(${g},${g},${g})`;
+    }
+
+    const MOCK_PROJECTS = {
+      'nt aeroplane live.xy': {
+        tempo: 128,
+        sceneCount: 12,
+        refs: { total: 56, missing: 1 },
+        tracks: {
+          1: { patterns: { 1: { preset: 'nt-aeroplane' }, 2: { preset: 'tape kit' }, 3: { preset: 'nt-aeroplane' } } },
+          2: { patterns: { 1: { preset: 'nt-aeroplane' } } },
+          3: { patterns: { 1: { preset: 'glass prism' }, 2: { preset: 'warm axis' } } },
+          4: { patterns: { 1: { preset: '—' } } },
+          5: { patterns: { 1: { preset: '—' } } },
+          6: { patterns: { 1: { preset: 'tape loop' }, 2: { preset: 'tape loop' }, 3: { preset: 'fade take' } } },
+          7: { patterns: { 1: { preset: '—' } } },
+          8: { patterns: { 1: { preset: '—' } } },
+          9: { patterns: { 1: { preset: '—' } } },
+          10: { patterns: { 1: { preset: '—' } } },
+          11: { patterns: { 1: { preset: '—' } } },
+          12: { patterns: { 1: { preset: '—' } } },
+          13: { patterns: { 1: { preset: '—' } } },
+          14: { patterns: { 1: { preset: '—' } } },
+          15: { patterns: { 1: { preset: '—' } } },
+          16: { patterns: { 1: { preset: '—' } } },
+        },
+        scenes: [
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 2, 2: 1, 3: 2, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 2, 2: 1, 3: 2, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+          { 1: 3, 2: 1, 3: 2, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1 },
+        ],
+      },
+      'ambient sketch.xy': {
+        tempo: 72,
+        sceneCount: 4,
+        refs: { total: 42, missing: 1 },
+        tracks: {
+          1: { patterns: { 1: { preset: 'clean kit' } } },
+          2: { patterns: { 1: { preset: 'clean kit' } } },
+          3: { patterns: { 1: { preset: 'low choir' }, 2: { preset: 'glass key' } } },
+          4: { patterns: { 1: { preset: '—' } } },
+          5: { patterns: { 1: { preset: '—' } } },
+          6: { patterns: { 1: { preset: '—' } } },
+          7: { patterns: { 1: { preset: '—' } } },
+          8: { patterns: { 1: { preset: '—' } } },
+        },
+        scenes: [
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+          { 1: 1, 2: 1, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+          { 1: 1, 2: 1, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+          { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
+        ],
+      },
+      'club tool 07.xy': {
+        tempo: 132,
+        sceneCount: 8,
+        refs: { total: 18, missing: 0 },
+        tracks: {
+          1: { patterns: { 1: { preset: 'tape kit' }, 2: { preset: 'clean kit' } } },
+          2: { patterns: { 1: { preset: 'tape kit' } } },
+          3: { patterns: { 1: { preset: 'warm axis' } } },
+        },
+        scenes: Array.from({ length: 8 }, (_, i) => ({ 1: i % 2 ? 2 : 1, 2: 1, 3: 1 })),
+      },
+      'broken clouds.xy': {
+        tempo: 94,
+        sceneCount: 3,
+        refs: { total: 31, missing: 0 },
+        tracks: {
+          1: { patterns: { 1: { preset: 'clean kit' } } },
+          3: { patterns: { 1: { preset: 'glass prism' } } },
+        },
+        scenes: [{ 1: 1, 3: 1 }, { 1: 1, 3: 1 }, { 1: 1, 3: 1 }],
+      },
+    };
+
+    let activeProjectId = null;
+    let sceneIndex = 0;
+    let selectedTrack = null;
+    let focusedPattern = null;
+    let refsOpen = false;
+    let gridBuilt = false;
+    let presetPickerOpen = false;
+    let presetPickerTarget = null;
+    const stackOffsets = new Map();
+    const lastActiveByTrack = {};
+    const MAX_PATTERNS = 9;
+    const MAX_SCENES = 99;
+
+    const MOCK_PRESETS = [
+      {
+        id: 'clean kit', type: 'drum', category: 'drum', idx: 1, regions: 24, loadedPads: 18,
+        modified: true, unnamedCount: 1, projectRefs: 4, sampleBased: true,
+        regionList: [
+          { slot: 'kd1', sample: 'kick clean c2 01.wav', note: 'C2', dur: '1.2s', unnamed: false },
+          { slot: 'sd1', sample: 'snare room d2 02.wav', note: 'D2', dur: '0.8s', unnamed: false },
+          { slot: 'ch1', sample: 'unnamed f#2 03.wav', note: 'F#2', dur: '0.4s', unnamed: true },
+          { slot: 'oh', sample: 'hat short a3 04.wav', note: 'A3', dur: '0.3s', unnamed: false },
+        ],
+      },
+      {
+        id: 'tape kit', type: 'drum', category: 'drum', idx: 2, regions: 18, loadedPads: 16,
+        modified: false, unnamedCount: 4, projectRefs: 2, sampleBased: true,
+        regionList: [
+          { slot: 'kd1', sample: 'kick tape c2 01.wav', note: 'C2', dur: '1.0s', unnamed: false },
+          { slot: 'sd1', sample: 'snare room d2 02.wav', note: 'D2', dur: '0.8s', unnamed: false },
+        ],
+      },
+      {
+        id: 'nt-aeroplane', type: 'drum', category: 'drum', idx: 3, regions: 24, loadedPads: 24,
+        modified: false, unnamedCount: 0, projectRefs: 6, sampleBased: true,
+        regionList: [
+          { slot: 'kd1', sample: 'kick clean c2 01.wav', note: 'C2', dur: '1.2s', unnamed: false },
+        ],
+      },
+      {
+        id: 'glass key', type: 'sampler', category: 'sampler', idx: 41, regions: 12, loadedPads: 12,
+        modified: false, unnamedCount: 0, projectRefs: 1, sampleBased: true,
+        regionList: [
+          { slot: 'c3', sample: 'glass key c3.wav', note: 'C3', dur: '2.1s', unnamed: false },
+        ],
+      },
+      {
+        id: 'low choir', type: 'sampler', category: 'sampler', idx: 42, regions: 8, loadedPads: 8,
+        modified: false, unnamedCount: 3, projectRefs: 2, sampleBased: true,
+        regionList: [
+          { slot: 'a2', sample: 'texture long a2.wav', note: 'A2', dur: '3.4s', unnamed: false },
+        ],
+      },
+      {
+        id: 'warm axis', type: 'synth', category: 'synth', idx: 91, regions: 0, loadedPads: 0,
+        modified: false, unnamedCount: 0, projectRefs: 1, sampleBased: false, engine: 'axis',
+        regionList: [],
+      },
+      {
+        id: 'glass prism', type: 'synth', category: 'synth', idx: 92, regions: 0, loadedPads: 0,
+        modified: false, unnamedCount: 0, projectRefs: 3, sampleBased: false, engine: 'prism',
+        regionList: [],
+      },
+      {
+        id: 'beach bum', type: 'multi', category: 'multisampler', idx: 120, regions: 16, loadedPads: 14,
+        modified: true, unnamedCount: 2, projectRefs: 0, sampleBased: true,
+        regionList: [
+          { slot: 'c2', sample: 'pluck beach bum.wav', note: 'C2', dur: '1.8s', unnamed: false },
+        ],
+      },
+    ];
+
+    const MOCK_PRESET_CATALOG = MOCK_PRESETS.map(p => ({ name: p.id, type: p.type === 'multi' ? 'multisampler' : p.type }));
+
+    const MOCK_SAMPLES = [
+      { id: 'kick clean c2 01.wav', location: 'presets/drum/clean kit', duration: '00:01.2', format: 'wav · 16 bit · 44.1k', presets: 2, projects: 4, status: 'clean', unnamed: false, user: false, missing: false,
+        refs: [{ type: 'preset', label: 'clean kit', goto: 'presets' }, { type: 'project', label: 'nt aeroplane live.xy', goto: 'projects' }] },
+      { id: 'hat short f#3 03.wav', location: 'presets/drum/clean kit', duration: '00:00.3', format: 'wav · 16 bit · 44.1k', presets: 1, projects: 1, status: 'clean', unnamed: false, user: false, missing: false,
+        refs: [{ type: 'preset', label: 'clean kit', goto: 'presets' }] },
+      { id: 'field noise a2.wav', location: 'samples/user', duration: '00:04.281', format: 'wav · 16 bit · 44.1k', presets: 1, projects: 3, status: 'clean', unnamed: false, user: true, missing: false,
+        refs: [{ type: 'preset', label: 'low choir', goto: 'presets' }, { type: 'project', label: 'ambient sketch.xy', goto: 'projects' }] },
+      { id: 'unnamed f#2 03.wav', location: 'presets/drum/clean kit', duration: '00:00.4', format: 'wav · 16 bit · 44.1k', presets: 1, projects: 2, status: 'unnamed', unnamed: true, user: false, missing: false,
+        refs: [{ type: 'preset', label: 'clean kit', goto: 'presets' }] },
+      { id: 'hat noise f#3 04.wav', location: 'projects/nt aeroplane live.xy', duration: '—', format: 'missing', presets: 0, projects: 1, status: 'missing', unnamed: false, user: false, missing: true,
+        refs: [{ type: 'project', label: 'nt aeroplane live.xy', goto: 'projects' }] },
+      { id: 'orphan hit d2.wav', location: 'samples/user', duration: '00:00.2', format: 'wav · 16 bit · 44.1k', presets: 0, projects: 0, status: 'unused', unnamed: false, user: true, missing: false, refs: [] },
+    ];
+
+    function defaultSceneAssignment(project) {
+      const s = {};
+      for (let t = 1; t <= 16; t++) s[t] = 1;
+      return s;
+    }
+
+    function getProject(name) {
+      const p = MOCK_PROJECTS[name];
+      if (!p) return null;
+      while (p.scenes.length < p.sceneCount) {
+        p.scenes.push({ ...defaultSceneAssignment(p), ...(p.scenes[p.scenes.length - 1] || {}) });
+      }
+      return p;
+    }
+
+    function patternSlots(trackData) {
+      if (!trackData) return [];
+      return Object.keys(trackData.patterns).map(Number).sort((a, b) => a - b);
+    }
+
+    function ensureTrack(project, trackNum) {
+      if (!project.tracks[trackNum]) {
+        project.tracks[trackNum] = { patterns: { 1: { preset: '—' } } };
+      }
+      return project.tracks[trackNum];
+    }
+
+    function stackOffsetFor(viewportH, activePat) {
+      const activeIdx = activePat - 1;
+      return (viewportH / 2) - (PATTERN_CELL_H / 2) - (activeIdx * PATTERN_CELL_H);
+    }
+
+    function applyStackOffset(stack, offset, animate) {
+      if (!animate) stack.classList.add('no-transition');
+      stack.style.transform = `translateY(${offset}px)`;
+      if (!animate) {
+        void stack.offsetHeight;
+        stack.classList.remove('no-transition');
+      }
+    }
+
+    function rebuildTrackStack(col, trackNum, project, scene) {
+      const td = ensureTrack(project, trackNum);
+      const slots = patternSlots(td);
+      const maxSlot = Math.max(...slots, 1);
+      const activePat = scene[trackNum] || 1;
+      const viewport = col.querySelector('.pattern-stack-viewport');
+      const stack = col.querySelector('.pattern-stack');
+      stack.innerHTML = '';
+
+      for (let p = 1; p <= maxSlot; p++) {
+        if (!td.patterns[p]) continue;
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'pattern-cell';
+        cell.dataset.pattern = String(p);
+        cell.textContent = String(p);
+        if (p === activePat) cell.classList.add('scene-active');
+        if (focusedPattern?.track === trackNum && focusedPattern?.pattern === p) {
+          cell.classList.add('focused');
+        }
+        stack.appendChild(cell);
+      }
+
+      const vh = viewport.clientHeight || 144;
+      const offset = stackOffsetFor(vh, activePat);
+      applyStackOffset(stack, offset, false);
+      stackOffsets.set(trackNum, offset);
+      lastActiveByTrack[trackNum] = activePat;
+    }
+
+    function syncTrackColumn(trackNum, project, scene, animateTracks) {
+      const col = document.getElementById('arrangeGrid')?.querySelector(`.arrange-col[data-track="${trackNum}"]`);
+      if (!col) return;
+
+      const td = ensureTrack(project, trackNum);
+      const activePat = scene[trackNum] || 1;
+      const activePreset = td.patterns[activePat]?.preset || '—';
+
+      col.classList.toggle('selected', selectedTrack === trackNum);
+      if (selectedTrack !== trackNum) {
+        col.style.setProperty('--lane-bg', laneGrey(trackNum));
+      } else {
+        col.style.removeProperty('--lane-bg');
+      }
+
+      col.querySelectorAll('.pattern-cell').forEach(cell => {
+        const p = Number(cell.dataset.pattern);
+        cell.classList.toggle('scene-active', p === activePat);
+        cell.classList.toggle('focused', focusedPattern?.track === trackNum && focusedPattern?.pattern === p);
+      });
+
+      const presetEl = col.querySelector('.track-preset');
+      presetEl.textContent = activePreset;
+      presetEl.classList.toggle('picker-target', presetPickerOpen && presetPickerTarget?.track === trackNum);
+
+      const viewport = col.querySelector('.pattern-stack-viewport');
+      const stack = col.querySelector('.pattern-stack');
+      const vh = viewport.clientHeight;
+      if (!vh) return;
+
+      const newOffset = stackOffsetFor(vh, activePat);
+      const oldOffset = stackOffsets.get(trackNum);
+      const shouldAnimate = animateTracks.has(trackNum) && oldOffset !== undefined && oldOffset !== newOffset;
+      applyStackOffset(stack, newOffset, shouldAnimate);
+      stackOffsets.set(trackNum, newOffset);
+      lastActiveByTrack[trackNum] = activePat;
+    }
+
+    function buildArrangeGrid() {
+      const project = getProject(activeProjectId);
+      const grid = document.getElementById('arrangeGrid');
+      if (!project) {
+        grid.innerHTML = '';
+        gridBuilt = false;
+        return;
+      }
+
+      const scene = project.scenes[sceneIndex] || defaultSceneAssignment(project);
+      grid.innerHTML = '';
+      stackOffsets.clear();
+
+      for (let trackNum = 1; trackNum <= INST_TRACK_COUNT; trackNum++) {
+        const col = document.createElement('div');
+        col.className = 'arrange-col' + (selectedTrack === trackNum ? ' selected' : '');
+        col.dataset.track = String(trackNum);
+        if (selectedTrack !== trackNum) {
+          col.style.setProperty('--lane-bg', laneGrey(trackNum));
+        }
+
+        const lane = document.createElement('div');
+        lane.className = 'pattern-lane';
+
+        const viewport = document.createElement('div');
+        viewport.className = 'pattern-stack-viewport';
+
+        const stack = document.createElement('div');
+        stack.className = 'pattern-stack';
+        viewport.appendChild(stack);
+        lane.appendChild(viewport);
+
+        const presetEl = document.createElement('button');
+        presetEl.type = 'button';
+        presetEl.className = 'track-preset';
+        lane.appendChild(presetEl);
+
+        col.appendChild(lane);
+        grid.appendChild(col);
+        rebuildTrackStack(col, trackNum, project, scene);
+      }
+
+      gridBuilt = true;
+      updateArrangeGrid({ animateTracks: new Set() });
+    }
+
+    function updateArrangeGrid({ animateTracks = new Set(), rebuildTracks = null } = {}) {
+      const project = getProject(activeProjectId);
+      if (!project || !gridBuilt) return;
+
+      const scene = project.scenes[sceneIndex] || defaultSceneAssignment(project);
+
+      if (rebuildTracks) {
+        rebuildTracks.forEach(trackNum => {
+          const col = document.getElementById('arrangeGrid').querySelector(`.arrange-col[data-track="${trackNum}"]`);
+          if (col) rebuildTrackStack(col, trackNum, project, scene);
+        });
+      }
+
+      for (let trackNum = 1; trackNum <= INST_TRACK_COUNT; trackNum++) {
+        if (rebuildTracks?.has(trackNum)) continue;
+        syncTrackColumn(trackNum, project, scene, animateTracks);
+      }
+
+      updateArrangeToolbar();
+    }
+
+    function getChangedTracks(prevScene, scene) {
+      const changed = new Set();
+      for (let t = 1; t <= INST_TRACK_COUNT; t++) {
+        if ((prevScene[t] || 1) !== (scene[t] || 1)) changed.add(t);
+      }
+      return changed;
+    }
+
+    function assignScenePattern(trackNum, patternNum) {
+      const project = getProject(activeProjectId);
+      if (!project) return;
+      const scene = project.scenes[sceneIndex];
+      const prev = { ...scene };
+      if (!project.tracks[trackNum]?.patterns[patternNum]) return;
+      scene[trackNum] = patternNum;
+      focusedPattern = { track: trackNum, pattern: patternNum };
+      selectedTrack = trackNum;
+      closePresetPicker();
+      updateArrangeGrid({ animateTracks: getChangedTracks(prev, scene) });
+      updateArrangeHead();
+    }
+
+    function changeScene(newIndex) {
+      const project = getProject(activeProjectId);
+      if (!project) return;
+      const prevScene = { ...(project.scenes[sceneIndex] || defaultSceneAssignment(project)) };
+      sceneIndex = newIndex;
+      const scene = project.scenes[sceneIndex] || defaultSceneAssignment(project);
+      closePresetPicker();
+      updateArrangeHead();
+      updateArrangeGrid({ animateTracks: getChangedTracks(prevScene, scene) });
+    }
+
+    function updateArrangeToolbar() {
+      const project = getProject(activeProjectId);
+      const ctx = document.getElementById('arrangeContext');
+      const addPat = document.getElementById('btnAddPattern');
+      const remPat = document.getElementById('btnRemovePattern');
+      const addSc = document.getElementById('btnAddScene');
+      const remSc = document.getElementById('btnRemoveScene');
+
+      if (!project || !selectedTrack) {
+        ctx.textContent = 'select a track · click preset to change sound';
+        addPat.disabled = true;
+        remPat.disabled = true;
+      } else {
+        const td = ensureTrack(project, selectedTrack);
+        const slots = patternSlots(td);
+        const pat = focusedPattern?.track === selectedTrack
+          ? focusedPattern.pattern
+          : (project.scenes[sceneIndex][selectedTrack] || 1);
+        const preset = td.patterns[pat]?.preset || '—';
+        ctx.textContent = `t${selectedTrack} · p${pat} · ${preset}`;
+        addPat.disabled = slots.length >= MAX_PATTERNS;
+        remPat.disabled = slots.length <= 1;
+      }
+
+      addSc.disabled = !project || project.sceneCount >= MAX_SCENES;
+      remSc.disabled = !project || project.sceneCount <= 1;
+    }
+
+    function addPatternOnTrack(trackNum) {
+      const project = getProject(activeProjectId);
+      if (!project) return;
+      const td = ensureTrack(project, trackNum);
+      const slots = patternSlots(td);
+      if (slots.length >= MAX_PATTERNS) return;
+      const next = Math.max(...slots, 0) + 1;
+      const copyPreset = td.patterns[slots[0] || 1]?.preset || '—';
+      td.patterns[next] = { preset: copyPreset };
+      focusedPattern = { track: trackNum, pattern: next };
+      updateArrangeGrid({ rebuildTracks: new Set([trackNum]) });
+    }
+
+    function removePatternOnTrack(trackNum) {
+      const project = getProject(activeProjectId);
+      if (!project) return;
+      const td = ensureTrack(project, trackNum);
+      const slots = patternSlots(td);
+      if (slots.length <= 1) return;
+      const removed = Math.max(...slots);
+      delete td.patterns[removed];
+      project.scenes.forEach(scene => {
+        if ((scene[trackNum] || 1) === removed) scene[trackNum] = 1;
+      });
+      const scenePat = project.scenes[sceneIndex][trackNum] || 1;
+      focusedPattern = { track: trackNum, pattern: scenePat };
+      updateArrangeGrid({ rebuildTracks: new Set([trackNum]), animateTracks: new Set([trackNum]) });
+    }
+
+    function addScene() {
+      const project = getProject(activeProjectId);
+      if (!project || project.sceneCount >= MAX_SCENES) return;
+      const current = { ...(project.scenes[sceneIndex] || defaultSceneAssignment(project)) };
+      project.scenes.push({ ...current });
+      project.sceneCount = project.scenes.length;
+      changeScene(project.sceneCount - 1);
+    }
+
+    function removeScene() {
+      const project = getProject(activeProjectId);
+      if (!project || project.sceneCount <= 1) return;
+      project.scenes.splice(sceneIndex, 1);
+      project.sceneCount = project.scenes.length;
+      changeScene(Math.min(sceneIndex, project.sceneCount - 1));
+    }
+
+    function openPresetPicker(trackNum, patternNum) {
+      const project = getProject(activeProjectId);
+      if (!project) return;
+      presetPickerTarget = { track: trackNum, pattern: patternNum };
+      presetPickerOpen = true;
+      focusedPattern = { track: trackNum, pattern: patternNum };
+      selectedTrack = trackNum;
+
+      const td = ensureTrack(project, trackNum);
+      const current = td.patterns[patternNum]?.preset || '—';
+      document.getElementById('presetPickerTitle').textContent =
+        `t${trackNum} · p${patternNum} · ${current === '—' ? 'choose preset' : current}`;
+      document.getElementById('presetPickerSearch').value = '';
+      document.getElementById('presetPicker').classList.remove('hidden');
+      renderPresetPickerList('');
+      updateArrangeGrid({ animateTracks: new Set() });
+      document.getElementById('presetPickerSearch').focus();
+    }
+
+    function closePresetPicker() {
+      presetPickerOpen = false;
+      presetPickerTarget = null;
+      document.getElementById('presetPicker').classList.add('hidden');
+      updateArrangeGrid({ animateTracks: new Set() });
+    }
+
+    function renderPresetPickerList(query) {
+      const project = getProject(activeProjectId);
+      if (!project || !presetPickerTarget) return;
+      const q = query.trim().toLowerCase();
+      const current = ensureTrack(project, presetPickerTarget.track).patterns[presetPickerTarget.pattern]?.preset || '—';
+      const list = document.getElementById('presetPickerList');
+      list.innerHTML = '';
+
+      MOCK_PRESET_CATALOG
+        .filter(p => !q || p.name.toLowerCase().includes(q) || p.type.includes(q))
+        .forEach(p => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'preset-picker-item' + (p.name === current ? ' active' : '');
+          btn.innerHTML = `<span>${p.name}</span><span class="type">${p.type}</span>`;
+          btn.addEventListener('click', () => {
+            ensureTrack(project, presetPickerTarget.track).patterns[presetPickerTarget.pattern].preset = p.name;
+            document.getElementById('presetPickerTitle').textContent =
+              `t${presetPickerTarget.track} · p${presetPickerTarget.pattern} · ${p.name}`;
+            closePresetPicker();
+            updateArrangeHead();
+            updateArrangeGrid({ animateTracks: new Set() });
+          });
+          list.appendChild(btn);
+        });
+
+      if (!list.children.length) {
+        list.innerHTML = '<div style="padding:12px 16px;opacity:0.45;font-size:11px">no presets match</div>';
+      }
+    }
+
+    function renderArrangeGrid() {
+      buildArrangeGrid();
+    }
+
+    function updateArrangeHead() {
+      const project = getProject(activeProjectId);
+      if (!project) return;
+      document.getElementById('arrangeFileName').textContent = activeProjectId;
+      document.getElementById('arrangeFileMeta').textContent =
+        `${project.tempo} bpm · ${project.sceneCount} scenes`;
+      document.getElementById('sceneBadge').textContent = String(sceneIndex + 1);
+      document.getElementById('sceneCountLabel').textContent =
+        `${sceneIndex + 1} / ${project.sceneCount}`;
+      document.getElementById('refsToggleLabel').textContent =
+        `sample refs · ${project.refs.total} indexed · ${project.refs.missing} missing`;
+    }
+
+    function openProject(name) {
+      activeProjectId = name;
+      sceneIndex = name === 'nt aeroplane live.xy' ? 9 : 0;
+      const p = getProject(name);
+      if (p && sceneIndex >= p.sceneCount) sceneIndex = 0;
+      selectedTrack = null;
+      focusedPattern = null;
+      gridBuilt = false;
+      closePresetPicker();
+
+      document.querySelectorAll('#projectsList .row').forEach(r => {
+        r.classList.toggle('selected', r.dataset.project === name);
+      });
+      document.getElementById('projectsEmpty').classList.add('hidden');
+      document.getElementById('arrangePane').classList.add('visible');
+
+      updateArrangeHead();
+      renderArrangeGrid();
+    }
+
+    document.querySelectorAll('#projectsList .row').forEach(row => {
+      row.addEventListener('click', () => openProject(row.dataset.project));
+    });
+
+    document.getElementById('scenePrev').addEventListener('click', () => {
+      const p = getProject(activeProjectId);
+      if (!p) return;
+      changeScene((sceneIndex - 1 + p.sceneCount) % p.sceneCount);
+    });
+    document.getElementById('sceneNext').addEventListener('click', () => {
+      const p = getProject(activeProjectId);
+      if (!p) return;
+      changeScene((sceneIndex + 1) % p.sceneCount);
+    });
+
+    document.getElementById('btnAddPattern').addEventListener('click', () => {
+      if (selectedTrack) addPatternOnTrack(selectedTrack);
+    });
+    document.getElementById('btnRemovePattern').addEventListener('click', () => {
+      if (selectedTrack) removePatternOnTrack(selectedTrack);
+    });
+    document.getElementById('btnAddScene').addEventListener('click', addScene);
+    document.getElementById('btnRemoveScene').addEventListener('click', removeScene);
+
+    document.getElementById('presetPickerClose').addEventListener('click', closePresetPicker);
+    document.getElementById('presetPickerSearch').addEventListener('input', (e) => {
+      renderPresetPickerList(e.target.value);
+    });
+
+    document.getElementById('arrangeGrid').addEventListener('click', (e) => {
+      const cell = e.target.closest('.pattern-cell');
+      if (cell) {
+        e.stopPropagation();
+        const col = cell.closest('.arrange-col');
+        const trackNum = Number(col.dataset.track);
+        const patternNum = Number(cell.dataset.pattern);
+        assignScenePattern(trackNum, patternNum);
+        return;
+      }
+
+      const presetBtn = e.target.closest('.track-preset');
+      if (presetBtn) {
+        e.stopPropagation();
+        const col = presetBtn.closest('.arrange-col');
+        const trackNum = Number(col.dataset.track);
+        const project = getProject(activeProjectId);
+        if (!project) return;
+        const patternNum = project.scenes[sceneIndex][trackNum] || 1;
+        openPresetPicker(trackNum, patternNum);
+        return;
+      }
+
+      const col = e.target.closest('.arrange-col');
+      if (col) {
+        selectedTrack = Number(col.dataset.track);
+        const project = getProject(activeProjectId);
+        if (project) {
+          const pat = project.scenes[sceneIndex][selectedTrack] || 1;
+          focusedPattern = { track: selectedTrack, pattern: pat };
+        }
+        closePresetPicker();
+        updateArrangeGrid({ animateTracks: new Set() });
+      }
+    });
+
+    document.getElementById('refsToggle').addEventListener('click', () => {
+      refsOpen = !refsOpen;
+      document.getElementById('arrangeRefs').classList.toggle('hidden', !refsOpen);
+    });
+
+    function getFilteredPresets() {
+      return MOCK_PRESETS.filter(p => {
+        if (presetFilter !== 'all') {
+          const t = presetFilter === 'multi' ? 'multi' : presetFilter;
+          if (p.type !== t) return false;
+        }
+        if (presetUnnamedOnly && p.unnamedCount === 0) return false;
+        if (presetModifiedOnly && !p.modified) return false;
+        if (presetSearch && !p.id.toLowerCase().includes(presetSearch.toLowerCase())) return false;
+        return true;
+      });
+    }
+
+    function renderPresetsList() {
+      const list = document.getElementById('presetsList');
+      const filtered = getFilteredPresets();
+      const groups = {};
+      filtered.forEach(p => {
+        if (!groups[p.category]) groups[p.category] = [];
+        groups[p.category].push(p);
+      });
+      list.innerHTML = '';
+      Object.keys(groups).forEach(cat => {
+        const items = groups[cat];
+        const collapsed = isCategoryCollapsed(cat, items.length);
+        const gl = document.createElement('div');
+        gl.className = 'group-label collapsible' + (collapsed ? ' collapsed' : '');
+        gl.textContent = `${cat} (${items.length})`;
+        gl.addEventListener('click', () => togglePresetCategory(cat));
+        list.appendChild(gl);
+        if (collapsed) return;
+        items.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'row preset-row' + (selectedPresetId === p.id ? ' selected' : '') + (p.unnamedCount ? ' unnamed' : '');
+          row.dataset.preset = p.id;
+          const mod = p.modified ? '● ' : '';
+          const bits = [];
+          if (p.unnamedCount) bits.push('?');
+          if (p.sampleBased) bits.push(String(p.regions));
+          else bits.push('cat');
+          const meta = bits.join(' ');
+          row.innerHTML = `<span class="idx">${String(p.idx).padStart(2, '0')}</span><span class="name">${mod}${p.id}</span><span class="meta">${meta}</span>`;
+          row.addEventListener('click', () => selectPreset(p.id));
+          list.appendChild(row);
+        });
+      });
+      const counter = document.getElementById('presetsListCounter');
+      if (counter) {
+        counter.textContent = filtered.length === MOCK_PRESETS.length ? '' : `${filtered.length}/${MOCK_PRESETS.length}`;
+      }
+    }
+
+    function renderPresetDetailActions(p) {
+      const el = document.getElementById('presetDetailActions');
+      el.innerHTML = '';
+      if (p.sampleBased) {
+        el.innerHTML += '<button type="button" class="inline-action primary" data-act="edit">edit</button>';
+      }
+      if (p.unnamedCount) {
+        el.innerHTML += '<button type="button" class="inline-action" data-act="regions">?</button>';
+      }
+      el.innerHTML += '<button type="button" class="inline-action" data-act="export">↗</button>';
+      el.querySelectorAll('[data-act]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.act === 'edit') setPresetSubmode('edit');
+          else if (btn.dataset.act === 'regions') setPresetSubmode('regions');
+        });
+      });
+      document.getElementById('bulkRenameBlock').classList.toggle('hidden', !p.unnamedCount);
+      document.getElementById('bulkRenameBase').value = p.id;
+    }
+
+    function presetMetaLine(p) {
+      const bits = [p.category, p.type];
+      if (p.sampleBased) bits.push(`${p.regions} samples`);
+      if (p.projectRefs) bits.push(`${p.projectRefs} proj`);
+      if (p.modified) bits.push('●');
+      if (p.unnamedCount) bits.push(`?${p.unnamedCount}`);
+      return bits.join(' · ');
+    }
+
+    function selectPreset(id, submode) {
+      const p = MOCK_PRESETS.find(x => x.id === id);
+      if (!p) return;
+      selectedPresetId = id;
+      selectedRegionId = null;
+      presetSubmode = submode || 'regions';
+      document.getElementById('presetsEmpty').classList.add('hidden');
+      document.getElementById('presetsDetailPane').classList.add('visible');
+      document.getElementById('detailTitle').textContent = p.id;
+      document.getElementById('detailMeta').textContent = presetMetaLine(p);
+      const filtered = getFilteredPresets();
+      const pos = filtered.findIndex(x => x.id === id);
+      document.getElementById('presetPos').textContent = pos >= 0 ? `${pos + 1}/${filtered.length}` : '—';
+      document.getElementById('presetPrev').disabled = pos <= 0;
+      document.getElementById('presetNext').disabled = pos < 0 || pos >= filtered.length - 1;
+      renderPresetDetailActions(p);
+      renderRegionsTable(p);
+      updateEditWorkspace(p);
+      setPresetSubmode(p.sampleBased ? presetSubmode : 'regions');
+      document.getElementById('presetRenameImpact').classList.add('hidden');
+      refreshFieldKeyboards();
+      renderPresetsList();
+    }
+
+    function navigatePreset(delta) {
+      const filtered = getFilteredPresets();
+      const idx = filtered.findIndex(p => p.id === selectedPresetId);
+      if (idx < 0) return;
+      const next = filtered[idx + delta];
+      if (next) selectPreset(next.id);
+    }
+
+    function renderRegionsTable(p) {
+      const el = document.getElementById('sub-regions');
+      let list = document.getElementById('regionsList');
+      if (!list) {
+        list = document.createElement('div');
+        list.id = 'regionsList';
+        el.appendChild(list);
+      }
+      list.innerHTML = '';
+      if (!p.sampleBased) {
+        list.innerHTML = '<p style="opacity:0.35;font-size:11px">—</p>';
+        return;
+      }
+      p.regionList.forEach((r, i) => {
+        const row = document.createElement('div');
+        row.className = 'row region-row' + (r.unnamed ? ' unnamed' : '') + (selectedRegionId === r.sample ? ' selected' : '');
+        row.dataset.region = r.sample;
+        const base = r.sample.replace(/\.wav$/, '').replace(/^unnamed /, '');
+        row.innerHTML = `
+          <span class="idx">${String(i + 1).padStart(2, '0')}</span>
+          <span class="slot">${r.slot}</span>
+          <span><input class="rename-input" type="text" value="${base}" data-sample="${r.sample}" /></span>
+          <span class="meta">${r.note}</span>
+          <span class="meta">${r.dur}</span>
+          <span class="region-actions">
+            <button type="button" class="inline-action icon region-play" title="play">▶</button>
+          </span>`;
+        row.querySelector('.region-play').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const semi = i % 12;
+          const oct = i < 12 ? 0 : 1;
+          if (p.type === 'drum') {
+            playDrumPad(i);
+            drumKb?.flash(oct, semi);
+          } else {
+            playFieldNote(FIELD_KB_BASE_MIDI + i, 'sine', 0.28);
+            previewKb?.flash(oct, semi);
+          }
+        });
+        row.querySelector('.rename-input').addEventListener('change', () => {
+          document.getElementById('presetRenameImpact').classList.remove('hidden');
+          document.getElementById('presetImpactText').textContent = '2 presets · 3 projects';
+        });
+        row.addEventListener('click', () => {
+          selectedRegionId = r.sample;
+          list.querySelectorAll('.region-row').forEach(x => x.classList.remove('selected'));
+          row.classList.add('selected');
+        });
+        list.appendChild(row);
+      });
+    }
+
+    function updateEditWorkspace(p) {
+      const isDrum = p.type === 'drum';
+      const isMulti = p.type === 'sampler' || p.type === 'multi';
+      document.getElementById('editDrumSampler').classList.toggle('hidden', !isDrum || !p.sampleBased);
+      document.getElementById('editMultisample').classList.toggle('hidden', !isMulti || !p.sampleBased);
+      document.getElementById('editSynth').classList.toggle('hidden', p.sampleBased);
+      if (!p.sampleBased) return;
+
+      if (isDrum) {
+        initDrumEditor(p);
+      }
+
+      const zoneTable = document.getElementById('editZoneTable');
+      if (isMulti && zoneTable) {
+        zoneTable.innerHTML = '';
+        p.regionList.forEach(r => {
+          const row = document.createElement('div');
+          row.className = 'row';
+          row.innerHTML = `<span class="slot">${r.note}</span><span class="name mono">${r.sample}</span><div class="wave-mini"></div><span class="region-actions"><button type="button" class="inline-action icon">▶</button><button type="button" class="inline-action icon">✕</button></span>`;
+          zoneTable.appendChild(row);
+        });
+      }
+      refreshFieldKeyboards();
+    }
+
+    function setPresetSubmode(sub) {
+      presetSubmode = sub;
+      const p = MOCK_PRESETS.find(x => x.id === selectedPresetId);
+      document.querySelectorAll('#presetSubmodes .seg').forEach(b => {
+        const hideEdit = b.dataset.sub === 'edit' && p && !p.sampleBased;
+        b.style.display = hideEdit ? 'none' : '';
+        b.classList.toggle('active', b.dataset.sub === sub);
+      });
+      document.querySelectorAll('#presetsDetailPane .sub-pane').forEach(pane => pane.classList.add('hidden'));
+      document.getElementById('sub-' + sub).classList.remove('hidden');
+      refreshFieldKeyboards();
+    }
+
+    function getFilteredSamples() {
+      return MOCK_SAMPLES.filter(s => {
+        if (sampleFilter === 'user' && !s.user) return false;
+        if (sampleFilter === 'linked' && s.presets === 0) return false;
+        if (sampleFilter === 'unused' && (s.presets > 0 || s.projects > 0)) return false;
+        if (sampleFilter === 'missing' && !s.missing) return false;
+        if (sampleUnnamedOnly && !s.unnamed) return false;
+        if (sampleSearch && !s.id.toLowerCase().includes(sampleSearch.toLowerCase())) return false;
+        return true;
+      });
+    }
+
+    function renderSamplesList() {
+      const list = document.getElementById('samplesList');
+      const filtered = getFilteredSamples();
+      list.innerHTML = '';
+      filtered.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'row sample-row' + (selectedSampleId === s.id ? ' selected' : '') + (s.unnamed ? ' unnamed' : '');
+        row.dataset.sample = s.id;
+        let meta = s.missing ? '!' : s.unnamed ? '?' : '';
+        row.innerHTML = `<span class="idx"></span><span class="name mono">${s.id}</span><span class="meta">${meta}</span>`;
+        row.addEventListener('click', () => selectSample(s.id));
+        list.appendChild(row);
+      });
+      const unnamedTotal = MOCK_SAMPLES.filter(s => s.unnamed).length;
+      document.getElementById('queueCount').textContent = String(unnamedTotal);
+      document.querySelector('.rename-queue-bar')?.classList.toggle('hidden', unnamedTotal === 0);
+      const counter = document.getElementById('samplesListCounter');
+      if (counter) {
+        counter.textContent = filtered.length === MOCK_SAMPLES.length ? '' : `${filtered.length}/${MOCK_SAMPLES.length}`;
+      }
+    }
+
+    function selectSample(id) {
+      const s = MOCK_SAMPLES.find(x => x.id === id);
+      if (!s) return;
+      selectedSampleId = id;
+      document.getElementById('samplesEmpty').classList.add('hidden');
+      document.getElementById('samplesDetailPane').classList.add('visible');
+      document.getElementById('sampleDetailTitle').textContent = s.id;
+      document.getElementById('sampleDetailMeta').textContent =
+        `${s.user ? 'user' : 'preset'} · ${s.duration.replace(/^00:/, '')} · ${s.presets + s.projects} refs`;
+      document.getElementById('sampleRenameInput').value = s.id.replace(/\.wav$/, '').replace(/^unnamed /, '');
+      document.getElementById('renameImpact').classList.add('hidden');
+      const refList = document.getElementById('sampleRefList');
+      refList.innerHTML = s.refs.length
+        ? s.refs.map(r => `<div class="ref-row"><span>${r.label}</span><span class="link" data-goto="${r.goto}" data-target="${r.label}">${r.type}</span></div>`).join('')
+        : '';
+      refList.querySelectorAll('[data-goto]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (link.dataset.goto === 'presets' && link.dataset.target) {
+            setMode('presets');
+            selectPreset(link.dataset.target);
+          } else if (link.dataset.goto === 'projects' && link.dataset.target) {
+            setMode('projects');
+            openProject(link.dataset.target);
+          } else {
+            setMode(link.dataset.goto);
+          }
+        });
+      });
+      renderSamplesList();
+    }
+
+    function initPresetsSamplesUI() {
+      renderPresetsList();
+      renderSamplesList();
+      selectPreset('clean kit');
+
+      document.querySelectorAll('#presetFilters .seg').forEach(seg => {
+        seg.addEventListener('click', () => {
+          document.querySelectorAll('#presetFilters .seg').forEach(s => s.classList.remove('active'));
+          seg.classList.add('active');
+          presetFilter = seg.dataset.filter;
+          renderPresetsList();
+          if (selectedPresetId && !getFilteredPresets().some(p => p.id === selectedPresetId)) {
+            const first = getFilteredPresets()[0];
+            if (first) selectPreset(first.id); else {
+              selectedPresetId = null;
+              document.getElementById('presetsDetailPane').classList.remove('visible');
+              document.getElementById('presetsEmpty').classList.remove('hidden');
+            }
+          } else if (selectedPresetId) {
+            selectPreset(selectedPresetId);
+          }
+        });
+      });
+
+      document.getElementById('presetSearch').addEventListener('input', e => {
+        presetSearch = e.target.value;
+        renderPresetsList();
+      });
+      document.getElementById('presetUnnamedToggle').addEventListener('click', function() {
+        presetUnnamedOnly = !presetUnnamedOnly;
+        this.classList.toggle('active', presetUnnamedOnly);
+        renderPresetsList();
+      });
+      document.getElementById('presetModifiedToggle').addEventListener('click', function() {
+        presetModifiedOnly = !presetModifiedOnly;
+        this.classList.toggle('active', presetModifiedOnly);
+        renderPresetsList();
+      });
+
+      document.getElementById('presetPrev').addEventListener('click', () => navigatePreset(-1));
+      document.getElementById('presetNext').addEventListener('click', () => navigatePreset(1));
+
+      document.querySelectorAll('#presetSubmodes .seg').forEach(btn => {
+        btn.addEventListener('click', () => setPresetSubmode(btn.dataset.sub));
+      });
+
+      document.getElementById('bulkRenameBtn').addEventListener('click', () => {
+        document.getElementById('presetRenameImpact').classList.remove('hidden');
+        document.getElementById('presetImpactText').textContent = '3 regions · 2 projects';
+      });
+
+      document.querySelectorAll('[data-edit-toggle]').forEach(btn => {
+        btn.addEventListener('click', function() { this.classList.toggle('active'); });
+      });
+
+      document.querySelectorAll('#sampleFilters .seg').forEach(seg => {
+        seg.addEventListener('click', () => {
+          document.querySelectorAll('#sampleFilters .seg').forEach(s => s.classList.remove('active'));
+          seg.classList.add('active');
+          sampleFilter = seg.dataset.filter;
+          renderSamplesList();
+        });
+      });
+      document.getElementById('sampleSearch').addEventListener('input', e => {
+        sampleSearch = e.target.value;
+        renderSamplesList();
+      });
+      document.getElementById('sampleUnnamedToggle').addEventListener('click', function() {
+        sampleUnnamedOnly = !sampleUnnamedOnly;
+        this.classList.toggle('active', sampleUnnamedOnly);
+        renderSamplesList();
+      });
+
+      document.getElementById('sampleRenameApply').addEventListener('click', () => {
+        const s = MOCK_SAMPLES.find(x => x.id === selectedSampleId);
+        if (!s) return;
+        document.getElementById('impactAffected').textContent = `${s.presets} · ${s.projects}`;
+        document.getElementById('renameImpact').classList.remove('hidden');
+      });
+      document.getElementById('impactApply').addEventListener('click', () => {
+        document.getElementById('renameImpact').classList.add('hidden');
+      });
+
+      document.getElementById('btnShowRename').addEventListener('click', () => {
+        renderRenameQueueTable();
+        document.getElementById('renameQueuePanel').classList.remove('hidden');
+      });
+      document.getElementById('closeRenameQueue').addEventListener('click', () => {
+        document.getElementById('renameQueuePanel').classList.add('hidden');
+      });
+      document.getElementById('queueDiscard').addEventListener('click', () => {
+        document.getElementById('renameQueuePanel').classList.add('hidden');
+      });
+      document.getElementById('queueApplyAll').addEventListener('click', () => {
+        document.getElementById('renameQueuePanel').classList.add('hidden');
+      });
+
+      function renderRenameQueueTable() {
+        const table = document.getElementById('renameQueueTable');
+        const unnamed = MOCK_SAMPLES.filter(s => s.unnamed).slice(0, 8);
+        table.innerHTML = unnamed.map(s => {
+          const base = s.id.replace(/\.wav$/, '').replace(/^unnamed /, '');
+          return `<div class="row"><span class="name mono">${s.id}</span><span class="meta">→ ${base}</span><span></span><span></span></div>`;
+        }).join('');
+      }
+
+      document.getElementById('btnReviewQueue').addEventListener('click', () => {
+        renderRenameQueueTable();
+        document.getElementById('renameQueuePanel').classList.remove('hidden');
+      });
+    }
+
+    openProject('nt aeroplane live.xy');
+
+    window.addEventListener('resize', () => {
+      const project = getProject(activeProjectId);
+      if (!project || !document.getElementById('arrangePane').classList.contains('visible') || !gridBuilt) return;
+      updateArrangeGrid({ animateTracks: new Set() });
+    });
+
+    document.querySelectorAll('[data-goto]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const target = link.dataset.target;
+        if (link.dataset.goto === 'presets' && target) {
+          setMode('presets');
+          selectPreset(target);
+        } else if (link.dataset.goto === 'samples' && target) {
+          setMode('samples');
+          selectSample(target);
+        } else if (link.dataset.goto === 'projects' && target) {
+          setMode('projects');
+          openProject(target);
+        } else {
+          setMode(link.dataset.goto);
+        }
+      });
+    });
+
+    initFieldKeyboards();
+    initDrumEditorUI();
+    initPresetsSamplesUI();
+    setMode('data');
+  </script>
+</body>
+</html>

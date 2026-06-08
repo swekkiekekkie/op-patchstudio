@@ -4,6 +4,7 @@ import { ConfirmationModal } from '../common/ConfirmationModal';
 import { RecordingModal } from '../common/RecordingModal';
 import { AudioProcessingSection } from '../common/AudioProcessingSection';
 import { GeneratePresetSection } from '../common/GeneratePresetSection';
+import { CacheEditorContextBar } from '../device/CacheEditorContextBar';
 
 import { DrumSampleTable } from './DrumSampleTable';
 import { DrumPresetSettings } from './DrumPresetSettings';
@@ -403,6 +404,8 @@ export function DrumTool() {
       flexDirection: 'column',
       height: '100%'
     }}>
+
+      <CacheEditorContextBar />
 
       {/* Always Visible Drum Keyboard Section with pinning */}
       <div style={{

@@ -4,8 +4,25 @@ contextBridge.exposeInMainWorld('opxy', {
   device: {
     status: () => ipcRenderer.invoke('device:status'),
     pull: () => ipcRenderer.invoke('device:pull'),
+    push: () => ipcRenderer.invoke('device:push'),
     cacheRoot: () => ipcRenderer.invoke('cache:root'),
     listPresets: () => ipcRenderer.invoke('cache:listPresets'),
+    listStandaloneSamples: () => ipcRenderer.invoke('cache:listStandaloneSamples'),
+    listCategories: () => ipcRenderer.invoke('cache:listCategories'),
+    getPresetDetail: (relativePath: string) => ipcRenderer.invoke('cache:getPresetDetail', relativePath),
+    renameSampleInPreset: (presetPath: string, oldFilename: string, newBase: string) =>
+      ipcRenderer.invoke('cache:renameSampleInPreset', presetPath, oldFilename, newBase),
+    renameStandaloneSample: (relativePath: string, newBase: string) =>
+      ipcRenderer.invoke('cache:renameStandaloneSample', relativePath, newBase),
+    writePreset: (payload: {
+      category: string;
+      presetName: string;
+      patchJson: string;
+      files: Array<{ name: string; data: number[] }>;
+    }) => ipcRenderer.invoke('cache:writePreset', payload.category, payload.presetName, payload.patchJson, payload.files),
+    restoreBackup: (backupPath: string) => ipcRenderer.invoke('cache:restoreBackup', backupPath),
+    listDirtyPresets: () => ipcRenderer.invoke('cache:listDirtyPresets'),
+    clearDirtyPreset: (relativePath: string) => ipcRenderer.invoke('cache:clearDirtyPreset', relativePath),
     readText: (relativePath: string) => ipcRenderer.invoke('cache:readText', relativePath),
     readBytes: (relativePath: string) => ipcRenderer.invoke('cache:readBytes', relativePath),
     exportPresetZip: (presetName: string, zipBase64: string) =>
@@ -13,5 +30,9 @@ contextBridge.exposeInMainWorld('opxy', {
     backup: () => ipcRenderer.invoke('device:backup'),
     listBackups: () => ipcRenderer.invoke('device:listBackups'),
     showBackup: (backupPath: string) => ipcRenderer.invoke('device:showBackup', backupPath),
+    buildProjectIndex: () => ipcRenderer.invoke('cache:buildProjectIndex'),
+    listProjects: () => ipcRenderer.invoke('cache:listProjects'),
+    getRenameImpact: (oldFilename: string, newBase: string) =>
+      ipcRenderer.invoke('cache:getRenameImpact', oldFilename, newBase),
   },
 });

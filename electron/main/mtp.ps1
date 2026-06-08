@@ -1,9 +1,10 @@
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('status', 'pull')]
+  [ValidateSet('status', 'pull', 'push')]
   [string]$Action,
 
-  [string]$Dest = ''
+  [string]$Dest = '',
+  [string]$Src = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -70,6 +71,34 @@ try {
     exit 0
   }
 
+  if ($Action -eq 'push') {
+    if (-not $Src) {
+      Write-Json @{ connected = $true; ok = $false; error = 'Missing source cache path' }
+      exit 1
+    }
+    $localPres = Join-Path $Src 'presets'
+    $localSamp = Join-Path $Src 'samples'
+    $pres = @($rootFolder.Items()) | Where-Object { $_.Name -eq 'presets' } | Select-Object -First 1
+    $samp = @($rootFolder.Items()) | Where-Object { $_.Name -eq 'samples' } | Select-Object -First 1
+
+    if ($pres -and (Test-Path $localPres)) {
+      $localItems = $shell.NameSpace($localPres).Items()
+      foreach ($item in @($localItems)) {
+        $pres.GetFolder().CopyHere($item, 0x14)
+      }
+    }
+    if ($samp -and (Test-Path $localSamp)) {
+      $localItems = $shell.NameSpace($localSamp).Items()
+      foreach ($item in @($localItems)) {
+        $samp.GetFolder().CopyHere($item, 0x14)
+      }
+    }
+
+    Start-Sleep -Seconds 20
+    Write-Json @{ connected = $true; ok = $true; deviceName = $device.Name }
+    exit 0
+  }
+
   if (-not $Dest) {
     Write-Json @{ connected = $true; ok = $false; error = 'Missing destination path' }
     exit 1
@@ -82,6 +111,8 @@ try {
 
   if ($pres) { Copy-MtpFolder $shell ($pres.GetFolder()) (Join-Path $Dest 'presets') }
   if ($samp) { Copy-MtpFolder $shell ($samp.GetFolder()) (Join-Path $Dest 'samples') }
+  $proj = @($rootFolder.Items()) | Where-Object { $_.Name -eq 'projects' } | Select-Object -First 1
+  if ($proj) { Copy-MtpFolder $shell ($proj.GetFolder()) (Join-Path $Dest 'projects') }
 
   # CopyHere is async
   Start-Sleep -Seconds 15

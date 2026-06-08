@@ -4,6 +4,7 @@ import { ConfirmationModal } from '../common/ConfirmationModal';
 import { RecordingModal } from '../common/RecordingModal';
 import { AudioProcessingSection } from '../common/AudioProcessingSection';
 import { GeneratePresetSection } from '../common/GeneratePresetSection';
+import { CacheEditorContextBar } from '../device/CacheEditorContextBar';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { MultisampleSampleTable } from './MultisampleSampleTable';
 import { MultisamplePresetSettings } from './MultisamplePresetSettings';
@@ -446,6 +447,8 @@ export function MultisampleTool() {
       flexDirection: 'column',
       height: '100%'
     }}>
+      <CacheEditorContextBar />
+
       {/* Header Section */}
 
 

@@ -163,6 +163,62 @@ export interface CachePresetEntry {
   type: string;
   sampleBased: boolean;
   sampleCount: number;
+  unnamedCount?: number;
+}
+
+export interface CacheSampleEntry {
+  relativePath: string;
+  filename: string;
+  base: string;
+  note: string;
+  idx: number;
+  isUnnamed: boolean;
+}
+
+export interface PresetRegionEntry {
+  index: number;
+  sample: string;
+  hikey?: number;
+  lokey?: number;
+  rootNote?: number;
+  base: string;
+  note: string;
+  idx: number;
+  isUnnamed: boolean;
+  hasAudio: boolean;
+}
+
+export interface PresetDetail {
+  relativePath: string;
+  name: string;
+  category: string;
+  type: string;
+  patchJson: string;
+  regions: PresetRegionEntry[];
+}
+
+export interface PresetWritePayload {
+  category: string;
+  presetName: string;
+  patchJson: string;
+  files: Array<{ name: string; data: number[] }>;
+}
+
+export function generateDeviceSampleFilename(
+  base: string,
+  rootNote: number,
+  idx: number,
+  ext: string = 'wav',
+): string {
+  const cleanBase = base.replace(/[^a-zA-Z0-9 #\-()]+/g, '').trim() || 'unnamed';
+  const noteNames = ['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b'];
+  const octave = Math.floor(rootNote / 12) - 1;
+  const note = `${noteNames[rootNote % 12]}${octave}`;
+  return `${cleanBase}-${note}-${idx}.${ext.toLowerCase()}`;
+}
+
+export function isUnnamedBase(base: string): boolean {
+  return /^unnamed(\s+\d+)?$/i.test(base.trim());
 }
 
 export interface DeviceStatus {
@@ -173,6 +229,7 @@ export interface DeviceStatus {
   lastBackupAt?: number | null;
   presetCount?: number;
   sampleCount?: number;
+  dirtyPresetCount?: number;
   error?: string | null;
 }
 
@@ -184,18 +241,63 @@ export interface BackupEntry {
   sampleCount: number;
 }
 
+export interface ProjectReference {
+  projectRelPath: string;
+  projectName: string;
+}
+
+export interface RenameImpact {
+  oldFilename: string;
+  newFilename: string;
+  presetRefs: string[];
+  projectRefs: ProjectReference[];
+}
+
+export interface ProjectListEntry {
+  relativePath: string;
+  name: string;
+  referencedSamples: string[];
+}
+
+export interface ProjectIndexSummary {
+  projectCount: number;
+  scannedFiles: number;
+  referencedFilenames: number;
+  builtAt: number;
+}
+
 export interface OpxyApi {
   device: {
     status(): Promise<DeviceStatus>;
     pull(): Promise<{ ok: boolean; error?: string; presetCount?: number; sampleCount?: number }>;
+    push(): Promise<{ ok: boolean; error?: string; deviceName?: string }>;
     backup(): Promise<{ ok: boolean; path?: string; presetCount?: number; sampleCount?: number; error?: string }>;
+    restoreBackup(backupPath: string): Promise<{ ok: boolean; error?: string }>;
     listBackups(): Promise<BackupEntry[]>;
     showBackup(backupPath: string): Promise<void>;
     cacheRoot(): Promise<string>;
     listPresets(): Promise<CachePresetEntry[]>;
+    listStandaloneSamples(): Promise<CacheSampleEntry[]>;
+    listCategories(): Promise<string[]>;
+    getPresetDetail(relativePath: string): Promise<PresetDetail>;
+    renameSampleInPreset(
+      presetPath: string,
+      oldFilename: string,
+      newBase: string,
+    ): Promise<{ ok: boolean; newFilename?: string; error?: string }>;
+    renameStandaloneSample(
+      relativePath: string,
+      newBase: string,
+    ): Promise<{ ok: boolean; newFilename?: string; relativePath?: string; error?: string }>;
+    writePreset(payload: PresetWritePayload): Promise<{ ok: boolean; relativePath?: string; error?: string }>;
+    listDirtyPresets(): Promise<string[]>;
+    clearDirtyPreset(relativePath: string): Promise<void>;
     readText(relativePath: string): Promise<string>;
     readBytes(relativePath: string): Promise<ArrayBuffer>;
     exportPresetZip(presetName: string, zipBase64: string): Promise<{ ok: boolean; path?: string; error?: string }>;
+    buildProjectIndex(): Promise<ProjectIndexSummary | null>;
+    listProjects(): Promise<ProjectListEntry[]>;
+    getRenameImpact(oldFilename: string, newBase: string): Promise<RenameImpact>;
   };
 }
 

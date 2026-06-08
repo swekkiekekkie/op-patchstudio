@@ -1,0 +1,359 @@
+// shared OP-XY MTP shell UI primitives (see docs/prototypes/opxy-shell-prototype.html)
+
+/* Solid color blocks — padding lives in sections; separators span full block width */
+.solid-block {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--block-bg, var(--mode-surface));
+
+  &__head {
+    flex-shrink: 0;
+    padding: var(--inset, calc(var(--grid, 8px) * 3));
+    border-bottom: 1px solid var(--separator, var(--border-subtle, color-mix(in srgb, currentColor 10%, transparent)));
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--inset, calc(var(--grid, 8px) * 3));
+  }
+
+  &__foot {
+    flex-shrink: 0;
+    padding: var(--inset, calc(var(--grid, 8px) * 3));
+    border-top: 1px solid var(--separator, var(--border-subtle, color-mix(in srgb, currentColor 10%, transparent)));
+  }
+}
+
+/* Square scrollbars — mode-aware via currentColor, zero radius */
+@mixin opxy-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, currentColor 24%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: var(--scrollbar-size, 6px);
+    height: var(--scrollbar-size, 6px);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-track:vertical {
+    border-left: 1px solid var(--separator, color-mix(in srgb, currentColor 10%, transparent));
+  }
+
+  &::-webkit-scrollbar-track:horizontal {
+    border-top: 1px solid var(--separator, color-mix(in srgb, currentColor 10%, transparent));
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, currentColor 24%, transparent);
+    border-radius: 0;
+
+    &:hover {
+      background: color-mix(in srgb, currentColor 38%, transparent);
+    }
+
+    &:active {
+      background: color-mix(in srgb, currentColor 52%, transparent);
+    }
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+.app-shell {
+  @include opxy-scrollbar;
+
+  * {
+    @include opxy-scrollbar;
+  }
+}
+
+/* Square icon + label buttons — use .icon-btn app-wide; .data-btn is an alias */
+.icon-btn,
+.data-btn {
+  width: var(--icon-btn-size, var(--data-btn-size, 76px));
+  height: var(--icon-btn-size, var(--data-btn-size, 76px));
+  border: 1px solid var(--border-control, color-mix(in srgb, currentColor 18%, transparent));
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: background var(--ease, 140ms ease), opacity var(--ease, 140ms ease);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.22;
+    cursor: not-allowed;
+  }
+
+  &.active {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    opacity: 1;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 10px;
+    text-transform: lowercase;
+    font-weight: 500;
+    opacity: 0.8;
+    line-height: 1;
+    text-align: center;
+    max-width: calc(var(--icon-btn-size, 76px) - 8px);
+  }
+}
+
+.icon-btn--sm {
+  width: var(--icon-btn-size-sm, 44px);
+  height: var(--icon-btn-size-sm, 44px);
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    font-size: 9px;
+    max-width: calc(var(--icon-btn-size-sm, 44px) - 6px);
+  }
+}
+
+.segments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--grid, 8px) * 1);
+  margin-bottom: calc(var(--grid, 8px) * 3);
+}
+
+.seg {
+  padding: 6px 12px;
+  min-height: 44px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  text-transform: lowercase;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: background var(--ease, 140ms ease), opacity var(--ease, 140ms ease);
+
+  &.active {
+    opacity: 1;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+}
+
+.search-field {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 0;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  color: inherit;
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  text-transform: lowercase;
+
+  &::placeholder {
+    opacity: 0.45;
+    text-transform: lowercase;
+  }
+
+  &:focus {
+    outline: none;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
+.library-workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: calc(var(--grid, 8px) * 3);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+
+  &--split {
+    grid-template-columns: 2fr 3fr;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  @media (max-width: 860px) {
+    &--split {
+      grid-template-columns: 1fr;
+      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+}
+
+.library-list-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  height: 100%;
+  border: none;
+  background: var(--mode-surface, color-mix(in srgb, currentColor 6%, transparent));
+  overflow: hidden;
+
+  > .library-toolbar,
+  > .list-toolbar {
+    flex-shrink: 0;
+  }
+
+  > .library-list-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+}
+
+.library-detail-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  height: 100%;
+  border: none;
+  background: var(--mode-surface-raised, color-mix(in srgb, currentColor 8%, transparent));
+  overflow: hidden;
+}
+
+.library-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
+  opacity: 0.45;
+  font-size: 12px;
+  text-transform: lowercase;
+  border: none;
+  background: var(--mode-surface, color-mix(in srgb, currentColor 4%, transparent));
+}
+
+.detail-head {
+  flex-shrink: 0;
+  padding: calc(var(--grid, 8px) * 2) calc(var(--grid, 8px) * 3);
+  border-bottom: none;
+}
+
+.detail-head-compact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: calc(var(--grid, 8px) * 1) calc(var(--grid, 8px) * 2);
+  align-items: center;
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    grid-column: 1;
+    text-transform: lowercase;
+  }
+
+  .detail-sub {
+    grid-column: 1;
+    font-family: ui-monospace, 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    opacity: 0.55;
+    text-transform: lowercase;
+  }
+
+  .detail-nav {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .detail-actions {
+    grid-column: 1 / -1;
+    margin-top: calc(var(--grid, 8px) * 1);
+  }
+}
+
+.detail-nav {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--grid, 8px) * 1);
+
+  button {
+    width: var(--icon-btn-size-sm, 44px);
+    height: var(--icon-btn-size-sm, 44px);
+    border: 1px solid var(--border-control, color-mix(in srgb, currentColor 18%, transparent));
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 11px;
+    opacity: 0.7;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    transition: background var(--ease, 140ms ease), opacity var(--ease, 140ms ease);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, currentColor 8%, transparent);
+      opacity: 1;
+    }
+
+    &:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+  }
+
+  .pos {
+    font-family: ui-monospace, 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    opacity: 0.45;
+    min-width: 40px;
+    text-align: center;
+  }
+}

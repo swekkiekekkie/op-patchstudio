@@ -16,7 +16,16 @@ export interface MtpPullResult {
   deviceName?: string;
 }
 
-function runMtpScript(action: 'status' | 'pull', dest: string): { ok: boolean; data?: Record<string, unknown>; error?: string } {
+export interface MtpPushResult {
+  ok: boolean;
+  error?: string;
+  deviceName?: string;
+}
+
+function runMtpScript(
+  action: 'status' | 'pull' | 'push',
+  opts: { dest?: string; src?: string } = {},
+): { ok: boolean; data?: Record<string, unknown>; error?: string } {
   if (!fs.existsSync(scriptPath)) {
     return { ok: false, error: `MTP script missing: ${scriptPath}` };
   }
@@ -31,14 +40,15 @@ function runMtpScript(action: 'status' | 'pull', dest: string): { ok: boolean; d
     '-Action',
     action,
   ];
-  if (action === 'pull') {
-    args.push('-Dest', dest);
-  }
+  if (action === 'pull') args.push('-Dest', opts.dest ?? '');
+  if (action === 'push') args.push('-Src', opts.src ?? '');
+
+  const timeout = action === 'push' ? 300_000 : 180_000;
 
   const result = spawnSync('powershell.exe', args, {
     encoding: 'utf8',
     maxBuffer: 10 * 1024 * 1024,
-    timeout: 180_000,
+    timeout,
     windowsHide: true,
   });
 
@@ -67,7 +77,7 @@ function runMtpScript(action: 'status' | 'pull', dest: string): { ok: boolean; d
 }
 
 export function mtpStatus(): MtpStatusResult {
-  const result = runMtpScript('status', '');
+  const result = runMtpScript('status');
   if (!result.ok || !result.data) {
     return { connected: false, error: result.error ?? 'MTP status check failed' };
   }
@@ -83,7 +93,7 @@ export function mtpPull(dest: string): MtpPullResult {
   if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
   fs.mkdirSync(dest, { recursive: true });
 
-  const result = runMtpScript('pull', dest);
+  const result = runMtpScript('pull', { dest });
   if (!result.ok || !result.data) {
     return { ok: false, error: result.error ?? 'MTP pull failed' };
   }
@@ -92,6 +102,26 @@ export function mtpPull(dest: string): MtpPullResult {
     return {
       ok: false,
       error: typeof result.data.error === 'string' ? result.data.error : 'MTP pull failed',
+    };
+  }
+
+  return { ok: true, deviceName: typeof result.data.deviceName === 'string' ? result.data.deviceName : undefined };
+}
+
+export function mtpPush(src: string): MtpPushResult {
+  if (!fs.existsSync(src)) {
+    return { ok: false, error: 'Cache folder not found' };
+  }
+
+  const result = runMtpScript('push', { src });
+  if (!result.ok || !result.data) {
+    return { ok: false, error: result.error ?? 'MTP push failed' };
+  }
+
+  if (!result.data.ok) {
+    return {
+      ok: false,
+      error: typeof result.data.error === 'string' ? result.data.error : 'MTP push failed',
     };
   }
 

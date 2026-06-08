@@ -1,0 +1,336 @@
+/* Mode screen layout — ported from docs/prototypes/opxy-shell-prototype.html */
+
+.mono {
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+}
+
+.mode-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.screen-title,
+.screen-headline {
+  flex-shrink: 0;
+}
+
+.screen-title {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: lowercase;
+  opacity: 0.55;
+  margin-bottom: calc(var(--grid, 8px) * 1);
+}
+
+.screen-headline {
+  font-size: 10px;
+  opacity: 0.45;
+  margin-bottom: calc(var(--grid, 8px) * 2);
+}
+
+.mode-screen-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  > .library-toolbar {
+    flex-shrink: 0;
+  }
+
+  > .library-workspace {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+.library-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: calc(var(--grid, 8px) * 2);
+  margin-bottom: calc(var(--grid, 8px) * 2);
+
+  .segments { margin-bottom: 0; }
+}
+
+.filter-toggles {
+  display: flex;
+  gap: calc(var(--grid, 8px) * 1);
+}
+
+.list-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: calc(var(--grid, 8px) * 2);
+  padding: calc(var(--grid, 8px) * 1) calc(var(--grid, 8px) * 2);
+  flex-shrink: 0;
+  font-size: 11px;
+  opacity: 0.55;
+
+  button {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    opacity: 0.75;
+    padding: 0;
+
+    &:hover { opacity: 1; }
+  }
+}
+
+.filter-toggle {
+  width: var(--icon-btn-size-sm, 44px);
+  height: var(--icon-btn-size-sm, 44px);
+  border: 1px solid var(--border-control, color-mix(in srgb, currentColor 18%, transparent));
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.45;
+
+  &.active {
+    opacity: 1;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  &:hover:not(.active) {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+}
+
+.library-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.group-label {
+  font-size: 11px;
+  text-transform: lowercase;
+  opacity: 0.55;
+  padding: calc(var(--grid, 8px) * 2) calc(var(--grid, 8px) * 1) calc(var(--grid, 8px) * 1);
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  margin-top: calc(var(--grid, 8px) * 1);
+
+  &:first-of-type { border-top: none; margin-top: 0; }
+
+  &.collapsible {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font-family: inherit;
+
+    &::before {
+      content: '▾';
+      font-size: 10px;
+      opacity: 0.45;
+    }
+    &.collapsed::before { content: '▸'; }
+  }
+}
+
+.object-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: calc(var(--grid, 8px) * 2);
+  align-items: center;
+  padding: calc(var(--grid, 8px) * 1.5) calc(var(--grid, 8px) * 1);
+  border: none;
+  border-left: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--ease, 140ms ease);
+
+  &:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+  &.selected {
+    border-left-color: currentColor;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .idx { font-family: ui-monospace, 'IBM Plex Mono', monospace; font-size: 11px; opacity: 0.5; }
+  .name { font-weight: 500; font-size: 13px; text-transform: lowercase; }
+  .meta { font-family: ui-monospace, 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.65; text-align: right; white-space: nowrap; }
+}
+
+.detail-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: calc(var(--grid, 8px) * 2) calc(var(--grid, 8px) * 3);
+}
+
+.detail-submodes.segments { margin-bottom: calc(var(--grid, 8px) * 2); }
+
+.sub-pane.hidden { display: none; }
+
+/* region table */
+.region-table .region-row {
+  display: grid;
+  grid-template-columns: 28px 44px 1fr 36px 40px 32px;
+  gap: calc(var(--grid, 8px) * 1);
+  align-items: center;
+  padding: calc(var(--grid, 8px) * 1) 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+  font-size: 11px;
+
+  &.unnamed .rename-input { color: color-mix(in srgb, #c44 65%, currentColor); }
+}
+
+.region-table .rename-input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  color: inherit;
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+  font-size: 11px;
+}
+
+.region-table .slot { opacity: 0.55; font-family: ui-monospace, 'IBM Plex Mono', monospace; }
+.region-table .meta-col { opacity: 0.45; font-family: ui-monospace, 'IBM Plex Mono', monospace; }
+
+.inline-action {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.75;
+
+  &.icon {
+    width: var(--icon-btn-size-sm, 44px);
+    height: var(--icon-btn-size-sm, 44px);
+    min-width: var(--icon-btn-size-sm, 44px);
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-control, color-mix(in srgb, currentColor 18%, transparent));
+    border-radius: 0;
+  }
+
+  &.primary { background: color-mix(in srgb, currentColor 12%, transparent); opacity: 1; }
+  &:hover:not(:disabled) { background: color-mix(in srgb, currentColor 8%, transparent); opacity: 1; }
+  &:disabled { opacity: 0.25; cursor: not-allowed; }
+}
+
+.bulk-rename-row {
+  display: flex;
+  gap: calc(var(--grid, 8px) * 2);
+  margin: calc(var(--grid, 8px) * 2) 0;
+
+  input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+    background: color-mix(in srgb, currentColor 4%, transparent);
+    color: inherit;
+    font-family: ui-monospace, 'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+}
+
+.edit-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--grid, 8px) * 2);
+}
+
+.edit-open-bar {
+  display: flex;
+  gap: calc(var(--grid, 8px) * 2);
+  align-items: center;
+  padding: calc(var(--grid, 8px) * 2) 0;
+}
+
+/* data mode sync cockpit — legacy helpers; data tab uses data-projects.scss */
+.data-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.data-status-line {
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: calc(var(--grid, 8px) * 1);
+}
+
+.backup-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: calc(var(--grid, 8px) * 2);
+  padding: calc(var(--grid, 8px) * 2) calc(var(--grid, 8px) * 3);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+  font-size: 11px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.ref-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: calc(var(--grid, 8px) * 2);
+  padding: calc(var(--grid, 8px) * 1.5) 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+  font-size: 11px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.slab {
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  padding: calc(var(--grid, 8px) * 3);
+  margin-top: calc(var(--grid, 8px) * 2);
+  max-width: 420px;
+  background: color-mix(in srgb, currentColor 4%, #1c1f22);
+}
+
+.slab-actions {
+  display: flex;
+  gap: calc(var(--grid, 8px) * 2);
+  margin-top: calc(var(--grid, 8px) * 3);
+
+  button {
+    flex: 1;
+    padding: calc(var(--grid, 8px) * 1.5);
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-transform: lowercase;
+    font-size: 12px;
+  }
+}

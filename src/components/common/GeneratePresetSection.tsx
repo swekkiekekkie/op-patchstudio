@@ -3,6 +3,7 @@ import { Toggle } from '@carbon/react';
 import { PatchSizeIndicator } from './PatchSizeIndicator';
 import { PresetNameInput } from './PresetNameInput';
 import { ToggleSwitch } from './ToggleSwitch';
+import { useAppContext } from '../../context/AppContext';
 import type { FilenameSeparator } from '../../utils/constants';
 import type { AudioFormat } from '../../utils/audioExport';
 
@@ -50,6 +51,9 @@ export function GeneratePresetSection({
   onAudioFormatChange
 }: GeneratePresetSectionProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const { state } = useAppContext();
+  const usesDeviceCache = typeof window !== 'undefined' && Boolean(window.opxy?.device?.writePreset);
+  const updatingCachePreset = Boolean(state.cacheSource);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -151,7 +155,8 @@ export function GeneratePresetSection({
             `}</style>
           </div>
 
-          {/* File Renaming Controls */}
+          {/* File Renaming Controls — PatchStudio ZIP naming; hidden in Electron cache mode */}
+          {!usesDeviceCache && (
           <div
             style={{
               width: isMobile ? '100%' : '60%',
@@ -292,6 +297,7 @@ export function GeneratePresetSection({
               </div>
             </div>
           </div>
+          )}
         </div>
         
         {/* Preset Size and Summary */}
@@ -387,7 +393,11 @@ export function GeneratePresetSection({
                   marginTop: '0.5rem'
                 }}>
                   <i className="fas fa-file-archive" style={{ fontSize: '0.7rem', width: '12px', textAlign: 'center' }}></i>
-                  <span>saves as '{presetName}.preset.zip'</span>
+                  <span>
+                    {usesDeviceCache
+                      ? `writes '${presetName}.preset' to device cache (device filenames)`
+                      : `saves as '${presetName}.preset.zip'`}
+                  </span>
                 </div>
               )}
             </div>
@@ -514,7 +524,7 @@ export function GeneratePresetSection({
             }}
           >
             <i className="fas fa-download" style={{ fontSize: '1rem' }}></i>
-            download preset
+            {usesDeviceCache ? (updatingCachePreset ? 'update cache preset' : 'save to cache') : 'download preset'}
           </button>
         </div>
       </div>
