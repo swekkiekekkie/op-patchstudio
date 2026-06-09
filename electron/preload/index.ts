@@ -8,6 +8,14 @@ contextBridge.exposeInMainWorld('opxy', {
     cacheRoot: () => ipcRenderer.invoke('cache:root'),
     listPresets: () => ipcRenderer.invoke('cache:listPresets'),
     listStandaloneSamples: () => ipcRenderer.invoke('cache:listStandaloneSamples'),
+    listSourceFolders: () => ipcRenderer.invoke('source:listFolders'),
+    addSourceFolder: () => ipcRenderer.invoke('source:addFolder'),
+    removeSourceFolder: (folderId: string) => ipcRenderer.invoke('source:removeFolder', folderId),
+    scanSourceFolders: () => ipcRenderer.invoke('source:scanFolders'),
+    copySourceSamplesToSet: (sourcePaths: string[], options?: { conflict: 'skip' | 'replace' }) =>
+      ipcRenderer.invoke('source:copySamplesToSet', sourcePaths, options),
+    copySourcePresetsToSet: (sourcePaths: string[], options?: { conflict: 'skip' | 'replace' }) =>
+      ipcRenderer.invoke('source:copyPresetsToSet', sourcePaths, options),
     listCategories: () => ipcRenderer.invoke('cache:listCategories'),
     getPresetDetail: (relativePath: string) => ipcRenderer.invoke('cache:getPresetDetail', relativePath),
     renameSampleInPreset: (presetPath: string, oldFilename: string, newBase: string) =>

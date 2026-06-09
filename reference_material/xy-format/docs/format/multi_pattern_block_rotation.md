@@ -65,6 +65,26 @@ Displaced blocks are absorbed into trailing overflow packing (notably around blo
   recording artifact from MIDI harness, not structural.
 - **Authoring strategy confirmed**: copy leader body, change only the note byte(s).
 
+## 2026-06-08 App Probe: 9-Pattern Preset Assignment on T1-T4
+
+`../user_probes/2026-06-app-required/projects/a1-t1-p1.xy` through
+`a4-t4-p9.xy` add an app-driven corpus focused on inspecting preset assignment
+per track pattern. The captures use identical drum presets named `pp` through
+`xx`, assigned to P1 through P9 respectively, with one note on step 1.
+
+Confirmed by `corpus_lab`:
+
+- T1, T2, T3, and T4 each map cleanly to nine active logical entries when
+  captured as the active probe track.
+- All active probe entries are `type_byte=0x07`, `engine_id=0x03`.
+- P1-P8 active bodies are 2230 bytes and P9 active bodies are 2231 bytes.
+- The selected drum preset folder can be inferred directly from each active
+  body via repeated `/fat32/presets/drum/<preset>` references. Each body has
+  24 repeated folder references, matching the drum region/sample count.
+
+This is enough for read-only app inspection of "track pattern uses preset
+folder" without waiting for full note-event decode.
+
 ## j06/j07 and 105b Era Findings
 - `j06/j07` confirms large-topology stability for specific descriptor variant and addressing map.
 - `105b` confirms non-T1 leader-note serialization branch requirements.

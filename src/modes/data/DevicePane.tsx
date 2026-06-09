@@ -1,16 +1,14 @@
-import type { StorageUsage } from '../../types/sync';
 import type { SyncCockpit } from '../../hooks/useSyncCockpit';
 import { ConnectPcArt } from './ConnectPcArt';
-import { StorageBlock } from './dataParts';
+import { InventoryPanel } from './dataParts';
 
 interface DevicePaneProps {
   sync: SyncCockpit;
-  deviceUsage: StorageUsage | null;
 }
 
-export function DevicePane({ sync, deviceUsage }: DevicePaneProps) {
+export function DevicePane({ sync }: DevicePaneProps) {
   const offline = !sync.connected;
-  const showLive = sync.connected && deviceUsage;
+  const showLive = sync.connected;
 
   return (
     <div className={`solid-block device-pane${offline ? ' offline' : ''}`}>
@@ -20,13 +18,18 @@ export function DevicePane({ sync, deviceUsage }: DevicePaneProps) {
       <div className="solid-block__body device-body">
         {showLive ? (
           <div className="device-live-inner">
-            <StorageBlock
-              usage={deviceUsage}
+            <InventoryPanel
+              label="device inventory"
               stats={{
                 presets: sync.presetCount,
                 samples: sync.sampleCount,
                 projects: sync.projectCount,
               }}
+              rows={[
+                ['source', sync.deviceName ?? 'op-xy over mtp'],
+                ['sizes', 'unavailable over mtp'],
+                ['last pull', sync.lastPullAt ?? 'not pulled this session'],
+              ]}
             />
           </div>
         ) : null}

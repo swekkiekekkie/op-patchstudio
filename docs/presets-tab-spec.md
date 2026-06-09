@@ -1,7 +1,7 @@
 # Presets tab — UI/UX & functionality spec
 
 **Status:** Split-pane prototype in [opxy-shell-prototype.html](./prototypes/opxy-shell-prototype.html)  
-**Parent docs:** [design-direction.md](./design-direction.md), [ui-ux-audit.md](./ui-ux-audit.md) (PresetBrowser / PresetInspector / DrumTool / MultisampleTool)  
+**Parent docs:** [design-direction.md](./design-direction.md), [compact-ui-ux-principles.md](./compact-ui-ux-principles.md), [ui-ux-audit.md](./ui-ux-audit.md) (PresetBrowser / PresetInspector / DrumTool / MultisampleTool)  
 **Last updated:** 2026-06-06
 
 ---
@@ -46,7 +46,7 @@ presets
 │ showing 42/275 │ presets / drum / clean kit    ◀ 1/8 ▶│
 │ collapse expand│ [open edit][export][duplicate]…        │
 │ ▾ drum · 12    │ clean kit                               │
-│ 01 clean kit ● │ [overview][regions][edit]               │
+│ 01 clean kit ● │ [overview][edit]                         │
 │ 02 tape kit    │ (sub-pane content)                      │
 │ ▸ keys · 48    │ save bar at bottom of edit submode      │
 └────────────────┴─────────────────────────────────────────┘
@@ -61,9 +61,19 @@ presets
 | Search | `searchQuery` filter |
 | Counter + collapse/expand | `showing X of Y`, `collapse all` / `expand all` |
 | Collapsible group headers | `groupPresetsByCategory`; >8 presets start collapsed |
-| Row meta | Region count, modified dot, unnamed count |
+| Row meta | Type, sample count where useful, modified state |
 
 **Fixes audit gap:** synth presets visible with honest `catalog` / engine label.
+
+### Hierarchy browser
+
+The preset browser should move from collapsible group headers toward OP-XY-style adjacent lists:
+
+- First hierarchy source is the actual set path, e.g. preset folders/categories.
+- Second hierarchy source can be inferred from stable filename prefixes, e.g. `nt-cuckoo fx` and `nt-cuckoo kicks` share `nt-cuckoo`.
+- Prefix inference is advisory. It should create navigable clusters only when at least two presets in the filtered library share the prefix; the visible preset list still stays scoped to the selected folder.
+- The UI should cap visible columns to the pane width, then preserve context with a breadcrumb/compressed middle column rather than adding horizontal clutter.
+- Search flattens results temporarily, but clearing search should restore the current hierarchy selection.
 
 ### Detail pane — inline actions (replaces command strip)
 
@@ -71,9 +81,8 @@ Actions appear in **detail-head** (`presetDetailActions`), not a sticky footer:
 
 | Context | Inline actions |
 |---------|------------------|
-| Sample-based preset | open edit · export · duplicate · review unnamed |
+| Sample-based preset | edit samples · export · duplicate |
 | Synth catalog | export · duplicate only |
-| Region row | ▶ preview · ↵ rename (impact slab on apply) |
 | Edit submode | reset · update preset (save bar) |
 
 ---
@@ -82,13 +91,13 @@ Actions appear in **detail-head** (`presetDetailActions`), not a sticky footer:
 
 | Submode | PatchStudio source | Prototype / product scope |
 |---------|-------------------|---------------------------|
-| **overview** | PresetInspector summary | Type, regions, project refs, modified status; bulk rename unnamed block |
-| **regions** | PresetInspector region table | Slot, inline rename input, note, duration, wave stub, play/rename per row |
+| **overview** | PresetInspector summary + patch JSON | Type-aware surface. Synth presets show engine values, ADSR envelopes, params, FX/LFO status. Drum/sampler presets show compact sample map and one clear editor entry point. |
 | **edit** | DrumTool + MultisampleTool (embedded) | See below |
 
 **Navigation:** ◀ ▶ walks filtered list (replaces PresetInspector prev/next + separate editor tab).
 
 **Removed:** `CacheEditorContextBar`, “back to device”, global command strip, tab switch on open editor.
+**Also removed:** separate `regions` submode. Region/sample work belongs in **edit**, where the samples are visible, playable, and eventually waveform-editable.
 
 ---
 
@@ -132,9 +141,9 @@ Read-only note: catalog metadata only; axis/prism engines not editable in v1.
 
 | Flow | PatchStudio | Presets tab |
 |------|-------------|-------------|
-| Single region rename | Region input + rename + project confirm | Inline input in regions table; impact slab in detail body |
-| Bulk rename unnamed | PresetInspector bulk block | Overview submode: base name + rename all unnamed |
-| Preview | `CacheAudioPreview` inline expand | ▶ on region row / pad (product) |
+| Single region rename | Region input + rename + project confirm | Edit sample table row, with playback/waveform context |
+| Bulk rename unnamed | PresetInspector bulk block | Edit submode command: generate names from preset + slot labels, then review before apply |
+| Preview | `CacheAudioPreview` inline expand | ▶ on editor sample row / pad |
 
 ---
 
@@ -171,3 +180,4 @@ Read-only note: catalog metadata only; axis/prism engines not editable in v1.
 - OP-1 drum import (hidden in PatchStudio today)
 - Duplicate / export confirmation flows
 - Dirty persistence across app restart
+- Hierarchical browser for folders + inferred author/prefix groups; use the same model as samples source folders

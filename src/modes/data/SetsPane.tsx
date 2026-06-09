@@ -7,11 +7,11 @@ import {
   CommitIcon,
   DataButton,
   HistoryIcon,
+  InventoryPanel,
   ListIcon,
   PushIcon,
   PullIcon,
   SaveAsIcon,
-  StorageBlock,
 } from './dataParts';
 
 interface SetsPaneProps {
@@ -19,7 +19,7 @@ interface SetsPaneProps {
   library: SetLibrary;
 }
 
-export function SetsPane({ sync, library }: SetsPaneProps) {
+export function SetsPane({ library }: SetsPaneProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [slideWidth, setSlideWidth] = useState(0);
 
@@ -70,7 +70,15 @@ export function SetsPane({ sync, library }: SetsPaneProps) {
                       style={slideWidth ? { width: slideWidth } : undefined}
                     >
                       <div className="set-live-inner">
-                        <StorageBlock usage={set.usage} stats={set.stats} />
+                        <InventoryPanel
+                          label="set inventory"
+                          stats={set.stats}
+                          rows={[
+                            ['state', set.lastPushedToDevice ? 'matches device marker' : 'local only'],
+                            ['history', `${Math.max(0, set.commits.length - 1)} checkpoints`],
+                            ['storage', 'local size optional'],
+                          ]}
+                        />
                       </div>
                     </div>
                   ))}

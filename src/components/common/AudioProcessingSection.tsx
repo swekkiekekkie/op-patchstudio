@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Toggle, Slider } from '@carbon/react';
 import { AudioFormatControls } from './AudioFormatControls';
+import type { SampleData } from './AudioFormatControls';
 import { EnhancedTooltip } from './EnhancedTooltip';
 import { AUDIO_CONSTANTS } from '../../utils/constants';
 
@@ -12,7 +13,7 @@ interface AudioProcessingSectionProps {
   onSampleRateChange: (value: string) => void;
   onBitDepthChange: (value: string) => void;
   onChannelsChange: (value: string) => void;
-  samples: any[];
+  samples: SampleData[];
   normalize: boolean;
   normalizeLevel: number;
   onNormalizeChange: (enabled: boolean) => void;

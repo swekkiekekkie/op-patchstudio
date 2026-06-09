@@ -1,6 +1,7 @@
 import { localStore, STORE_KEYS } from './localStore';
 import { AUDIO_CONSTANTS } from './constants';
 import type { AppState } from '../context/AppContext';
+import type { ImportedPresetJson } from './jsonImport';
 
 // Default settings that will be used when no custom defaults are saved
 export const defaultDrumSettings: AppState['drumSettings'] = {
@@ -65,16 +66,16 @@ export const defaultMultisampleSettings: AppState['multisampleSettings'] = {
 // Extended default settings that include imported preset data
 export interface ExtendedDrumDefaults {
   basicSettings: typeof defaultDrumSettings;
-  importedPreset: any | null;
+  importedPreset: ImportedPresetJson | null;
 }
 
 export interface ExtendedMultisampleDefaults {
   basicSettings: typeof defaultMultisampleSettings;
-  importedPreset: any | null;
+  importedPreset: ImportedPresetJson | null;
 }
 
 // Save drum settings as default (including imported preset data)
-export function saveDrumSettingsAsDefault(settings: AppState['drumSettings'], importedPreset: any | null = null): void {
+export function saveDrumSettingsAsDefault(settings: AppState['drumSettings'], importedPreset: ImportedPresetJson | null = null): void {
   try {
     const settingsToSave: ExtendedDrumDefaults = {
       basicSettings: {
@@ -106,7 +107,7 @@ export function saveDrumSettingsAsDefault(settings: AppState['drumSettings'], im
 }
 
 // Save multisample settings as default (including imported preset data)
-export function saveMultisampleSettingsAsDefault(settings: AppState['multisampleSettings'], importedPreset: any | null = null): void {
+export function saveMultisampleSettingsAsDefault(settings: AppState['multisampleSettings'], importedPreset: ImportedPresetJson | null = null): void {
   try {
     const settingsToSave: ExtendedMultisampleDefaults = {
       basicSettings: {
@@ -231,7 +232,7 @@ export function loadMultisampleDefaultSettings(): typeof defaultMultisampleSetti
 }
 
 // Load drum imported preset data
-export function loadDrumImportedPreset(): any | null {
+export function loadDrumImportedPreset(): ImportedPresetJson | null {
   try {
     const savedSettings = localStore.get(STORE_KEYS.DRUM_DEFAULT_SETTINGS);
     if (savedSettings) {
@@ -245,7 +246,7 @@ export function loadDrumImportedPreset(): any | null {
 }
 
 // Load multisample imported preset data
-export function loadMultisampleImportedPreset(): any | null {
+export function loadMultisampleImportedPreset(): ImportedPresetJson | null {
   try {
     const savedSettings = localStore.get(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
     if (savedSettings) {

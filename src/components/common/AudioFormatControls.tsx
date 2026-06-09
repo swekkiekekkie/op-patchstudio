@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Select, SelectItem } from '@carbon/react';
 
-interface SampleData {
+export interface SampleData {
   originalBitDepth?: number;
   originalSampleRate?: number;
   originalChannels?: number;

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { buildStorageBar } from '../../data/storageBar';
 import type { SetStats, StorageUsage } from '../../types/sync';
 import { DEVICE_CAPACITY_GB } from '../../types/sync';
@@ -49,29 +48,46 @@ export function StorageBlock({ usage, stats, capacityGb = DEVICE_CAPACITY_GB }: 
   );
 }
 
-interface DataButtonProps {
+interface InventoryPanelProps {
   label: string;
-  disabled?: boolean;
-  active?: boolean;
-  onClick?: () => void;
-  children: ReactNode;
-  ariaLabel?: string;
+  stats: SetStats;
+  rows: Array<[label: string, value: string]>;
 }
 
-export function DataButton({ label, disabled, active, onClick, children, ariaLabel }: DataButtonProps) {
+export function InventoryPanel({ label, stats, rows }: InventoryPanelProps) {
   return (
-    <button
-      type="button"
-      className={`icon-btn data-btn${active ? ' active' : ''}`}
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={ariaLabel ?? label}
-    >
-      {children}
-      <span>{label}</span>
-    </button>
+    <div className="inventory-panel" aria-label={label}>
+      <div className="inventory-counts">
+        <div>
+          <span className="inventory-count mono">{stats.presets}</span>
+          <span>presets</span>
+        </div>
+        <div>
+          <span className="inventory-count mono">{stats.samples}</span>
+          <span>samples</span>
+        </div>
+        <div>
+          <span className="inventory-count mono">{stats.projects}</span>
+          <span>projects</span>
+        </div>
+      </div>
+      <div className="inventory-facts">
+        {rows.map(([rowLabel, value]) => (
+          <div key={rowLabel} className="inventory-fact">
+            <span>{rowLabel}</span>
+            <span className="mono">{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
+
+export {
+  ActionButton as DataButton,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '../../ui/ActionButton';
 
 export function PullIcon() {
   return (
@@ -87,22 +103,6 @@ export function PushIcon() {
     <svg viewBox="0 0 24 24" aria-hidden>
       <path d="M12 19V7" />
       <path d="M8 11l4-4 4 4" />
-    </svg>
-  );
-}
-
-export function ChevronLeftIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M14 8l-4 4 4 4" />
-    </svg>
-  );
-}
-
-export function ChevronRightIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M10 8l4 4-4 4" />
     </svg>
   );
 }

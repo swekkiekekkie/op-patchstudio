@@ -26,7 +26,7 @@ describe('MainTabs', () => {
     
     // Check that all tabs are present with proper ARIA attributes
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(5); // drum, multisample, library, donate, feedback
+    expect(tabs).toHaveLength(3); // device, drum, multisample
     
     // Check that each tab has proper ARIA attributes
     tabs.forEach(tab => {
@@ -36,34 +36,31 @@ describe('MainTabs', () => {
       expect(tab).toHaveAttribute('id');
     });
     
-    // Check that only the active tab (drum) is focusable
-    const drumTab = screen.getByRole('tab', { name: 'drum tab' });
-    expect(drumTab).toHaveAttribute('tabindex', '0');
-    expect(drumTab).toHaveAttribute('aria-selected', 'true');
+    // Check that only the active tab (device) is focusable
+    const deviceTab = screen.getByRole('tab', { name: 'device tab' });
+    expect(deviceTab).toHaveAttribute('tabindex', '0');
+    expect(deviceTab).toHaveAttribute('aria-selected', 'true');
     
     // Check that inactive tabs are not focusable
-    const inactiveTabs = tabs.filter(tab => tab !== drumTab);
+    const inactiveTabs = tabs.filter(tab => tab !== deviceTab);
     inactiveTabs.forEach(tab => {
       expect(tab).toHaveAttribute('tabindex', '-1');
       expect(tab).toHaveAttribute('aria-selected', 'false');
     });
     
-    // Check that the drum tabpanel is present and properly labeled
-    // Use getByTestId or find by ID since the aria-label might not be exactly as expected
-    const drumPanel = document.getElementById('drum-tabpanel');
-    expect(drumPanel).toBeInTheDocument();
-    expect(drumPanel).toHaveAttribute('role', 'tabpanel');
-    expect(drumPanel).toHaveAttribute('aria-labelledby', 'drum-tab');
+    // Check that the main tabpanel is present
+    const mainPanel = screen.getByRole('tabpanel', { name: 'main application content' });
+    expect(mainPanel).toBeInTheDocument();
     
-    // Check that the drum tab controls the drum panel
-    expect(drumTab).toHaveAttribute('aria-controls', 'drum-tabpanel');
+    const drumTab = screen.getByRole('tab', { name: 'drum tab' });
+    expect(drumTab).toHaveAttribute('aria-controls', 'drum-panel');
   });
 
   it('should have proper tab order and navigation', () => {
     renderWithContext();
     
     const tabs = screen.getAllByRole('tab');
-    const expectedTabNames = ['drum tab', 'multisample tab', 'library tab', 'donate tab', 'feedback tab'];
+    const expectedTabNames = ['device tab', 'drum tab', 'multisample tab'];
     
     // Check that tabs are in the correct order
     tabs.forEach((tab, index) => {

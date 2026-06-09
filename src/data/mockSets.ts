@@ -29,4 +29,3 @@ export const MOCK_SETS: SetSummary[] = [
 
 export const CACHE_BACKED_SET_INDEX = 2;
 
-export const DEVICE_USAGE = { presets: 2.1, samples: 3.2, projects: 0.4, other: 1.7 };

@@ -623,6 +623,14 @@ Redesign is successful when:
 
 **Interactive prototype:** [opxy-shell-prototype.html](./prototypes/opxy-shell-prototype.html) — open in a browser; bottom tabs switch modes and background color.
 
+**Product requirements & flows:** [product-requirements-and-flows.md](./product-requirements-and-flows.md) — sets, sample library stewardship, preset configs, pattern slots, and scene arrangement scope. Companion: [ux-flow-map-and-traceability.md](./ux-flow-map-and-traceability.md).
+
+**Compact UI/UX principles:** [compact-ui-ux-principles.md](./compact-ui-ux-principles.md) — screen-space budget, density rules, flow hygiene, and aesthetic constraints for the four-mode app.
+
+**MVP screen slices:** [mvp-screen-slices.md](./mvp-screen-slices.md) — build order, compact acceptance criteria, and what each first-pass screen must keep out.
+
+**Product decisions:** [product-decisions.md](./product-decisions.md) — stable IA, set, sync, preset, sample, project, scene, and preflight decisions.
+
 **Data tab (detailed spec):** [data-tab-spec.md](./data-tab-spec.md) — layout, sets model, commit/history, offline states, and TBD items. Supersedes the brief notes below.
 
 **Projects tab (arrange / scenes):** [projects-tab-spec.md](./projects-tab-spec.md) — pattern inventory, scene matrix UI, xy-format parsing status, phased plan.

@@ -1,16 +1,15 @@
 import type { ProjectPatternCell } from '../types/sync';
 
 export function formatPatternPresetLabel(cell: ProjectPatternCell | undefined): string {
-  if (!cell) return 'custom';
-
-  if (cell.kind === 'custom') return 'custom';
-
-  if (cell.kind === 'tweaked') {
-    const base = cell.preset.trim();
-    return base && base !== '—' ? `tweaked (${base})` : 'tweaked';
-  }
+  if (!cell) return 'empty';
 
   const name = cell.preset.trim();
-  if (!name || name === '—') return 'custom';
+  if (cell.kind === 'custom') return name && name !== '—' && name !== '-' ? name : 'custom';
+
+  if (cell.kind === 'tweaked') {
+    return name && name !== '—' && name !== '-' ? `tweaked (${name})` : 'tweaked';
+  }
+
+  if (!name || name === '—' || name === '-') return 'empty';
   return name;
 }

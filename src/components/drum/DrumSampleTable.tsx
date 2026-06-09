@@ -8,8 +8,8 @@ import { SmallWaveform } from '../common/SmallWaveform';
 import { WaveformZoomModal } from '../common/WaveformZoomModal';
 import { FileDetailsBadges } from '../common/FileDetailsBadges';
 import { DrumSampleSettingsModal } from './DrumSampleSettingsModal';
-import { IconButton } from '../common/IconButton';
 import { getOrganizeModeLabelFull } from './DrumKeyboard';
+import { ActionButton, ClearIcon, PlayIcon, SettingsIcon } from '../../ui';
 
 
 interface DrumSampleTableProps {
@@ -17,6 +17,7 @@ interface DrumSampleTableProps {
   onClearSample: (index: number) => void;
   onRecordSample?: (index: number) => void;
   isOrganizeMode?: boolean;
+  embedded?: boolean;
 }
 
 // Full drum names from OP-XY documentation - all lowercase
@@ -52,7 +53,7 @@ const organizedIndices = [
 // Default indices (0-23)
 const defaultIndices = Array.from({ length: 24 }, (_, i) => i);
 
-export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, isOrganizeMode = false }: DrumSampleTableProps) {
+export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, isOrganizeMode = false, embedded = false }: DrumSampleTableProps) {
   const { state, dispatch } = useAppContext();
   const { play } = useAudioPlayer();
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -487,9 +488,13 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
   }
 
   // Desktop Table Layout
+  const gridColumns = embedded
+    ? '88px minmax(150px, 0.45fr) minmax(180px, 1fr) 96px'
+    : '120px minmax(200px, 1fr) minmax(200px, 1fr) 180px';
+
   return (
     <div style={{
-      fontFamily: '"Montserrat", "Arial", sans-serif',
+      fontFamily: embedded ? 'inherit' : '"Montserrat", "Arial", sans-serif',
       // Remove or reduce padding/margin so table stretches to section edges
       padding: 0,
       margin: 0
@@ -497,19 +502,19 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
       {/* Table Header */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '120px minmax(200px, 1fr) minmax(200px, 1fr) 180px',
+        gridTemplateColumns: gridColumns,
         gap: '0.5rem',
-        padding: '0.75rem',
+        padding: embedded ? '0.5rem 0.75rem' : '0.75rem',
         background: c.bgAlt,
         borderBottom: 'none',
-        fontSize: '0.8rem',
-        fontWeight: 'bold',
+        fontSize: embedded ? '0.68rem' : '0.8rem',
+        fontWeight: embedded ? 500 : 'bold',
         color: c.textSecondary
       }}>
-        <div>drum key</div>
-        <div>file details</div>
-        <div style={{ paddingLeft: '10px' }}>waveform</div>
-        <div style={{ paddingLeft: '10px' }}>actions</div>
+        <div>slot</div>
+        <div>sample</div>
+        <div style={{ paddingLeft: embedded ? 0 : '10px' }}>waveform</div>
+        <div style={{ paddingLeft: embedded ? 0 : '10px' }}>actions</div>
       </div>
 
       {/* Sample Rows */}
@@ -542,14 +547,14 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '120px minmax(200px, 1fr) minmax(200px, 1fr) 180px',
+                  gridTemplateColumns: gridColumns,
                   gap: '0.5rem',
                   padding: 0, // Remove row padding
                   background: isLoaded && hoveredIndex === index && draggedItem !== null && draggedItem !== index ? c.bgAlt : c.bg,
                   borderBottom: index < state.drumSamples.length - 1 ? `1px solid ${c.border}` : 'none',
                   transition: 'background 0.2s ease',
                   alignItems: 'center',
-                  minHeight: '54px',
+                  minHeight: embedded ? '44px' : '54px',
                   opacity: draggedItem === index ? 0.5 : 1,
                   cursor: isLoaded ? 'move' : 'default'
                 }}
@@ -573,19 +578,19 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                 {/* Drum Name */}
                 <div style={{
                   gridColumn: '1 / 2',
-                  fontSize: '0.8rem',
+                  fontSize: embedded ? '0.72rem' : '0.8rem',
                   fontWeight: '500',
                   color: c.text,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  paddingLeft: '16px'
+                  paddingLeft: embedded ? '10px' : '16px'
                 }}>
                   {isLoaded && (
-                    <i 
+                    <i
                       className="fas fa-grip-lines" 
                       style={{ 
-                        fontSize: '12px', 
+                        fontSize: embedded ? '10px' : '12px',
                         color: c.textSecondary,
                         opacity: 0.6,
                         cursor: 'move'
@@ -621,7 +626,7 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                       gap: '0.15rem'
                     }}>
                       <div style={{
-                        fontSize: '0.8rem',
+                        fontSize: embedded ? '0.72rem' : '0.8rem',
                         fontWeight: '500',
                         color: c.text,
                         wordBreak: 'break-word',
@@ -629,20 +634,22 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                       }}>
                         {sample.name}
                       </div>
-                      <FileDetailsBadges
-                        duration={sample.duration}
-                        fileSize={sample.fileSize}
-                        channels={sample.originalChannels}
-                        bitDepth={sample.originalBitDepth}
-                        sampleRate={sample.originalSampleRate}
-                        isFloat={sample.isFloat}
-                      />
+                      {!embedded ? (
+                        <FileDetailsBadges
+                          duration={sample.duration}
+                          fileSize={sample.fileSize}
+                          channels={sample.originalChannels}
+                          bitDepth={sample.originalBitDepth}
+                          sampleRate={sample.originalSampleRate}
+                          isFloat={sample.isFloat}
+                        />
+                      ) : null}
                     </div>
 
                     {/* Waveform */}
                     <div style={{
                       gridColumn: '3 / 4',
-                      height: '44px',
+                      height: embedded ? '34px' : '44px',
                       display: 'flex',
                       alignItems: 'center',
                       paddingRight: '8px'
@@ -650,7 +657,7 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                                               {sample.audioBuffer ? (
                           <SmallWaveform
                             audioBuffer={sample.audioBuffer}
-                            height={44}
+                            height={embedded ? 34 : 44}
                             inPoint={Math.round((sample.inPoint || 0) * sample.audioBuffer.sampleRate)}
                             outPoint={Math.round((sample.outPoint || sample.duration || sample.audioBuffer.duration) * sample.audioBuffer.sampleRate)}
                             onMarkersChange={(markers: { inPoint: number; outPoint: number; loopStart?: number; loopEnd?: number }) => {
@@ -671,7 +678,7 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                         ) : (
                         <div style={{
                           width: '100%',
-                          height: '44px',
+                          height: embedded ? '34px' : '44px',
                           background: c.borderSubtle,
                           borderRadius: '3px',
                           display: 'flex',
@@ -692,13 +699,13 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                       onClick={() => openFileDialog(index)}
                       style={{
                         width: '100%',
-                        height: '44px',
+                        height: embedded ? '34px' : '44px',
                         background: 'none',
-                        border: `2px dashed ${c.borderMed}`,
+                        border: `1px dashed ${c.borderMed}`,
                         borderRadius: '3px',
                         padding: '0 1rem',
                         color: c.textSecondary,
-                        fontSize: '0.8rem',
+                        fontSize: embedded ? '0.72rem' : '0.8rem',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -726,35 +733,45 @@ export function DrumSampleTable({ onFileUpload, onClearSample, onRecordSample, i
                   gap: '0.25rem',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  paddingRight: '16px'
+                  paddingRight: embedded ? '10px' : '16px'
                 }}>
-                  <IconButton
-                    icon="fas fa-play"
+                  <ActionButton
+                    label=""
                     onClick={() => playSample(index).catch(error => { console.error('Error playing sample:', error); })}
-                    title="play"
-                    color={isLoaded ? c.action : c.textSecondary}
+                    ariaLabel="play"
+                    size="sm"
                     disabled={!isLoaded}
-                  />
-                  <IconButton
-                    icon="fas fa-times"
+                  >
+                    <PlayIcon />
+                  </ActionButton>
+                  <ActionButton
+                    label=""
                     onClick={() => onClearSample(index)}
-                    title="clear"
-                    color={isLoaded ? c.action : c.textSecondary}
+                    ariaLabel="clear"
+                    size="sm"
                     disabled={!isLoaded}
-                  />
-                  <IconButton
-                    icon="fas fa-microphone"
-                    onClick={() => onRecordSample?.(index)}
-                    title="record"
-                    color="var(--color-accent-primary)"
-                  />
-                  <IconButton
-                    icon="fas fa-cog"
+                  >
+                    <ClearIcon />
+                  </ActionButton>
+                  {!embedded ? (
+                    <button
+                      type="button"
+                      className="icon-btn data-btn icon-btn--sm"
+                      onClick={() => onRecordSample?.(index)}
+                      title="record"
+                    >
+                      <i className="fas fa-microphone" style={{ fontSize: '14px' }}></i>
+                    </button>
+                  ) : null}
+                  <ActionButton
+                    label=""
                     onClick={() => openSettingsModal(index)}
-                    title="settings"
-                    color={isLoaded ? c.action : c.textSecondary}
+                    ariaLabel="settings"
+                    size="sm"
                     disabled={!isLoaded}
-                  />
+                  >
+                    <SettingsIcon />
+                  </ActionButton>
                 </div>
               </div>
             </div>

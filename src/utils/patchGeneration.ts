@@ -4,7 +4,7 @@ import { convertAudioFormat, sanitizeName, LOOP_END_PADDING, generateFilename } 
 import { exportAudioBuffer, getAudioFileExtension, type AudioFormat } from './audioExport';
 import { baseDrumJson } from '../components/drum/baseDrumJson';
 import { baseMultisampleJson } from '../components/multisample/baseMultisampleJson';
-import { percentToInternal } from './valueConversions';
+import { percentToInternal, type JsonObject } from './valueConversions';
 import { mergeImportedDrumSettings, mergeImportedMultisampleSettings } from './jsonImport';
 import type { AppState, MultisampleFile } from '../context/AppContext';
 
@@ -52,12 +52,12 @@ interface MultisampleRegion {
   tune: number;
 }
 
-interface DrumJson {
+interface DrumJson extends JsonObject {
   name?: string;
-  engine: any;
-  envelope: any;
-  fx: any;
-  lfo: any;
+  engine: JsonObject;
+  envelope: JsonObject;
+  fx: JsonObject;
+  lfo: JsonObject;
   octave: number;
   platform: string;
   regions: DrumRegion[];
@@ -65,12 +65,12 @@ interface DrumJson {
   version: number;
 }
 
-interface MultisampleJson {
+interface MultisampleJson extends JsonObject {
   name?: string;
-  engine: any;
-  envelope: any;
-  fx: any;
-  lfo: any;
+  engine: JsonObject;
+  envelope: JsonObject;
+  fx: JsonObject;
+  lfo: JsonObject;
   octave: number;
   platform: string;
   regions: MultisampleRegion[];
@@ -83,7 +83,7 @@ function validateFrameCount(
   sampleName: string,
   expectedFramecount: number,
   actualFramecount: number,
-  region: any
+  region: DrumRegion | MultisampleRegion
 ): void {
   if (actualFramecount !== expectedFramecount) {
     console.warn(`Frame count mismatch for ${sampleName}:`, {
@@ -118,7 +118,7 @@ export async function generateDrumPatch(
   patchJson.regions = [];
 
   // Merge imported preset settings if they exist
-  mergeImportedDrumSettings(patchJson, (state as any).importedDrumPresetJson);
+  mergeImportedDrumSettings(patchJson, state.importedDrumPreset);
 
   // Apply drum preset settings (convert from 0-100% to 0-32767)
   if (patchJson.engine && state.drumSettings.presetSettings) {
@@ -293,7 +293,7 @@ export async function generateMultisamplePatch(
   patchJson.regions = [];
 
   // Merge imported preset settings if they exist
-  mergeImportedMultisampleSettings(patchJson, (state as any).importedMultisamplePreset);
+  mergeImportedMultisampleSettings(patchJson, state.importedMultisamplePreset);
 
   // Apply multisample preset settings
   if (patchJson.engine && state.multisampleSettings) {

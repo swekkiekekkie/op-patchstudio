@@ -1,0 +1,137 @@
+/* Embedded drum / sampler editor inside presets detail */
+
+.preset-editor-embed {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;
+}
+
+.preset-editor-loading {
+  padding: calc(var(--grid, 8px) * 3);
+  opacity: 0.45;
+  font-size: 11px;
+  text-transform: lowercase;
+}
+
+.edit-unavailable {
+  opacity: 0.45;
+  font-size: 11px;
+  text-transform: lowercase;
+}
+
+.edit-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.library-detail-pane .detail-body:has(.edit-workspace) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.patch-editor--embedded {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  color: inherit;
+  background: transparent;
+  gap: calc(var(--grid, 8px) * 2);
+  --color-bg-primary: transparent;
+  --color-bg-secondary: color-mix(in srgb, currentColor 5%, transparent);
+  --color-bg-panel: transparent;
+  --color-surface-primary: transparent;
+  --color-surface-secondary: color-mix(in srgb, currentColor 5%, transparent);
+  --color-border-light: color-mix(in srgb, currentColor 10%, transparent);
+  --color-border-medium: color-mix(in srgb, currentColor 16%, transparent);
+  --color-border-subtle: color-mix(in srgb, currentColor 8%, transparent);
+  --color-shadow-primary: transparent;
+  --color-interactive-focus: currentColor;
+  --color-interactive-dark: currentColor;
+  --color-interactive-secondary: currentColor;
+  --color-interactive-focus-ring: color-mix(in srgb, currentColor 18%, transparent);
+
+  /* Flatten PatchStudio card chrome */
+  [style*='border-radius'],
+  [style*='borderRadius'] {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  h3 {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-transform: lowercase;
+    color: inherit !important;
+    opacity: 0.72;
+  }
+
+  button[style*='border-radius'] {
+    border-radius: 0 !important;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent) !important;
+    background: transparent !important;
+    color: inherit !important;
+    font-size: 11px !important;
+    text-transform: lowercase;
+    min-height: 44px;
+    padding: 0 calc(var(--grid, 8px) * 2) !important;
+    box-shadow: none !important;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, currentColor 8%, transparent) !important;
+    }
+  }
+
+  .embedded-editor-keyboard {
+    flex-shrink: 0;
+    padding: 0;
+    background: color-mix(in srgb, currentColor 4%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 9%, transparent);
+  }
+
+  .embedded-editor-samples {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .embedded-sample-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-color: color-mix(in srgb, currentColor 10%, transparent) !important;
+    background: transparent !important;
+  }
+
+  .embedded-sample-panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .icon-btn--sm {
+    --icon-btn-size-sm: 34px;
+    border-color: color-mix(in srgb, currentColor 14%, transparent);
+    background: transparent;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  canvas {
+    filter: saturate(0.35) contrast(0.9);
+  }
+}

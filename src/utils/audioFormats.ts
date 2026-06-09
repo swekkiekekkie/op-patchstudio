@@ -197,7 +197,7 @@ async function parseAifMetadata(arrayBuffer: ArrayBuffer, filename: string, mapp
     try {
       const audioContext = await audioContextManager.getAudioContext();
       audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    } catch (decodeError) {
+    } catch {
       // Browser decode failed, fall back to manual AIF decoder
       if (ssndOffset > 0 && ssndSize > 0) {
         try {
@@ -218,7 +218,7 @@ async function parseAifMetadata(arrayBuffer: ArrayBuffer, filename: string, mapp
         if (parsed && parsed.length > 1) {
           midiNote = parsed[1];
         }
-      } catch (_) {
+      } catch {
         // ignore filename parsing errors
       }
     }
@@ -237,7 +237,7 @@ async function parseAifMetadata(arrayBuffer: ArrayBuffer, filename: string, mapp
       bitDepth,
       channels,
       duration,
-      audioBuffer: audioBuffer as any, // Will be null if decoding failed
+      audioBuffer: audioBuffer as AudioBuffer, // Will be null if decoding failed
       fileSize: bufferCopy.byteLength,
       midiNote,
       loopStart: loopStartSeconds,
@@ -273,7 +273,14 @@ async function decodeAifManually(
 
   
   // Create AudioContext with matching sample rate
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+  const audioContextConstructor =
+    window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+  if (!audioContextConstructor) {
+    throw new Error('AudioContext is not available');
+  }
+
+  const audioContext = new audioContextConstructor({
     sampleRate: sampleRate
   });
   
@@ -308,7 +315,7 @@ async function decodeAifManually(
               // 16-bit signed, big-endian
               sample = dataView.getInt16(sampleOffset, false) / 32768;
               break;
-            case 24:
+            case 24: {
               // 24-bit signed, big-endian
               const b1 = dataView.getUint8(sampleOffset);
               const b2 = dataView.getUint8(sampleOffset + 1);
@@ -320,6 +327,7 @@ async function decodeAifManually(
               }
               sample = value / 8388608;
               break;
+            }
             case 32:
               // 32-bit signed, big-endian
               sample = dataView.getInt32(sampleOffset, false) / 2147483648;
@@ -358,7 +366,7 @@ async function parseMp3Metadata(
     if (parsed && parsed.length > 1) {
       midiNote = parsed[1];
     }
-  } catch (_) {
+  } catch {
     // ignore filename parsing errors
   }
 
@@ -400,7 +408,7 @@ export async function readAudioMetadataFromArrayBuffer(
     const format = detectAudioFormat(arrayBuffer, filename);
     
     switch (format) {
-      case 'wav':
+      case 'wav': {
         const wavMetadata = await readWavMetadataFromArrayBuffer(arrayBuffer, filename, fileSize, mapping);
         // Convert WavMetadata to AudioMetadata
         return {
@@ -417,6 +425,7 @@ export async function readAudioMetadataFromArrayBuffer(
           hasLoopData: wavMetadata.hasLoopData,
           isFloat: false // WAV format in our implementation doesn't support float
         };
+      }
       case 'aif':
       case 'aiff':
         return await parseAifMetadata(arrayBuffer, filename, mapping);

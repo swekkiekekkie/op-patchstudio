@@ -38,6 +38,7 @@ export interface ProjectListItem {
   name: string;
   relativePath: string;
   sceneCount: number;
+  inspection?: ProjectInspection;
 }
 
 export type ProjectPatternPresetKind = 'named' | 'custom' | 'tweaked';
@@ -45,6 +46,10 @@ export type ProjectPatternPresetKind = 'named' | 'custom' | 'tweaked';
 export interface ProjectPatternCell {
   preset: string;
   kind?: ProjectPatternPresetKind;
+  refKind?: ProjectPresetFolderKind;
+  confidence?: ProjectPresetFolderHit['confidence'];
+  presetPath?: string;
+  draft?: boolean;
 }
 
 export interface ProjectTrackData {
@@ -67,4 +72,37 @@ export interface ProjectArrangement {
   tracks: Record<number, ProjectTrackData>;
   scenes: Array<Record<number, number>>;
   sampleRefs: ProjectSampleRef[];
+}
+
+export type ProjectParseStatus = 'ok' | 'partial' | 'unsupported' | 'error';
+
+export type ProjectPresetFolderKind = 'drum' | 'synth' | 'multi' | 'sample' | 'sampler' | 'unknown';
+
+export interface ProjectPresetFolderHit {
+  folder: string;
+  kind: ProjectPresetFolderKind;
+  hitCount: number;
+  confidence: 'strong' | 'medium' | 'weak';
+}
+
+export interface ProjectPatternInspection {
+  patternNumber: number;
+  active: boolean;
+  engineId?: number;
+  engineName?: string;
+  bodyLength?: number;
+  presetRefs: ProjectPresetFolderHit[];
+  /** @deprecated use presetRefs; kept while app code migrates from the first TS parser spike. */
+  inferredPresetFolders?: ProjectPresetFolderHit[];
+}
+
+export interface ProjectTrackInspection {
+  trackNumber: number;
+  patterns: ProjectPatternInspection[];
+}
+
+export interface ProjectInspection {
+  parseStatus: ProjectParseStatus;
+  tracks: ProjectTrackInspection[];
+  warnings: string[];
 }

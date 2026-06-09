@@ -14,18 +14,18 @@ import {
   defaultMultisampleSettings
 } from '../../utils/defaultSettings';
 import { createCompleteMultisampleSettings } from './testHelpers';
-import { cookieUtils, COOKIE_KEYS } from '../../utils/cookies';
+import { localStore, STORE_KEYS } from '../../utils/localStore';
 
-// Mock the cookie utilities
-vi.mock('../../utils/cookies', () => ({
-  cookieUtils: {
-    setCookie: vi.fn(),
-    getCookie: vi.fn(),
-    removeCookie: vi.fn(),
+// Mock the desktop-local persistence utilities
+vi.mock('../../utils/localStore', () => ({
+  localStore: {
+    set: vi.fn(),
+    get: vi.fn(),
+    remove: vi.fn(),
   },
-  COOKIE_KEYS: {
-    DRUM_DEFAULT_SETTINGS: 'opxy_drum_default_settings',
-    MULTISAMPLE_DEFAULT_SETTINGS: 'opxy_multisample_default_settings',
+  STORE_KEYS: {
+    DRUM_DEFAULT_SETTINGS: 'drum-default-settings',
+    MULTISAMPLE_DEFAULT_SETTINGS: 'multisample-default-settings',
   }
 }));
 
@@ -41,7 +41,7 @@ describe('defaultSettings', () => {
   });
 
   describe('saveDrumSettingsAsDefault', () => {
-    it('should save drum settings to cookies', () => {
+    it('should save drum settings to local storage', () => {
       const mockSettings = {
         sampleRate: 48000,
         bitDepth: 24,
@@ -64,8 +64,8 @@ describe('defaultSettings', () => {
 
       saveDrumSettingsAsDefault(mockSettings, null);
 
-      expect(cookieUtils.setCookie).toHaveBeenCalledWith(
-        COOKIE_KEYS.DRUM_DEFAULT_SETTINGS,
+      expect(localStore.set).toHaveBeenCalledWith(
+        STORE_KEYS.DRUM_DEFAULT_SETTINGS,
         JSON.stringify({
           basicSettings: {
             sampleRate: 48000,
@@ -87,8 +87,7 @@ describe('defaultSettings', () => {
             }
           },
           importedPreset: null
-        }),
-        365
+        })
       );
     });
 
@@ -125,8 +124,8 @@ describe('defaultSettings', () => {
 
       saveDrumSettingsAsDefault(mockSettings, mockImportedPreset);
 
-      expect(cookieUtils.setCookie).toHaveBeenCalledWith(
-        COOKIE_KEYS.DRUM_DEFAULT_SETTINGS,
+      expect(localStore.set).toHaveBeenCalledWith(
+        STORE_KEYS.DRUM_DEFAULT_SETTINGS,
         JSON.stringify({
           basicSettings: {
             sampleRate: 48000,
@@ -148,14 +147,13 @@ describe('defaultSettings', () => {
             }
           },
           importedPreset: mockImportedPreset
-        }),
-        365
+        })
       );
     });
   });
 
   describe('saveMultisampleSettingsAsDefault', () => {
-    it('should save multisample settings to cookies', () => {
+    it('should save multisample settings to local storage', () => {
       const mockSettings = createCompleteMultisampleSettings({
         sampleRate: 96000,
         bitDepth: 32,
@@ -194,13 +192,12 @@ describe('defaultSettings', () => {
 
       saveMultisampleSettingsAsDefault(mockSettings, null);
 
-      expect(cookieUtils.setCookie).toHaveBeenCalledWith(
-        COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS,
+      expect(localStore.set).toHaveBeenCalledWith(
+        STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS,
         JSON.stringify({
           basicSettings: mockSettings,
           importedPreset: null
-        }),
-        365
+        })
       );
     });
 
@@ -272,8 +269,8 @@ describe('defaultSettings', () => {
 
       saveMultisampleSettingsAsDefault(mockSettings, mockImportedPreset);
 
-      expect(cookieUtils.setCookie).toHaveBeenCalledWith(
-        COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS,
+      expect(localStore.set).toHaveBeenCalledWith(
+        STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS,
         JSON.stringify({
           basicSettings: {
             sampleRate: 44100,
@@ -313,12 +310,11 @@ describe('defaultSettings', () => {
             }
           },
           importedPreset: mockImportedPreset
-        }),
-        365
+        })
       );
     });
 
-    it('should save multisample settings with imported preset to cookies', () => {
+    it('should save multisample settings with imported preset to local storage', () => {
       const mockSettings = createCompleteMultisampleSettings({
         sampleRate: 96000,
         bitDepth: 32,
@@ -367,8 +363,8 @@ describe('defaultSettings', () => {
 
       saveMultisampleSettingsAsDefault(mockSettings, mockImportedPreset);
 
-      expect(cookieUtils.setCookie).toHaveBeenCalledWith(
-        COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS,
+      expect(localStore.set).toHaveBeenCalledWith(
+        STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS,
         JSON.stringify({
           basicSettings: {
             sampleRate: 96000,
@@ -408,8 +404,7 @@ describe('defaultSettings', () => {
             }
           },
           importedPreset: mockImportedPreset
-        }),
-        365
+        })
       );
     });
   });
@@ -418,14 +413,14 @@ describe('defaultSettings', () => {
     beforeEach(() => {
       vi.clearAllMocks();
       // Set up valid JSON for the mock cookie
-      (cookieUtils.getCookie as any).mockReturnValue(JSON.stringify({
+      (localStore.get as any).mockReturnValue(JSON.stringify({
         basicSettings: defaultDrumSettings,
         importedPreset: null
       }));
     });
 
     it('should return default settings when no custom settings are saved', () => {
-      (cookieUtils.getCookie as any).mockReturnValue(null);
+      (localStore.get as any).mockReturnValue(null);
 
       const result = loadDrumDefaultSettings();
 
@@ -451,7 +446,7 @@ describe('defaultSettings', () => {
         }
       };
 
-      (cookieUtils.getCookie as any).mockReturnValue(JSON.stringify(customSettings));
+      (localStore.get as any).mockReturnValue(JSON.stringify(customSettings));
 
       const result = loadDrumDefaultSettings();
 
@@ -462,7 +457,7 @@ describe('defaultSettings', () => {
     });
 
     it('should handle JSON parsing errors gracefully', () => {
-      (cookieUtils.getCookie as any).mockReturnValue('invalid json');
+      (localStore.get as any).mockReturnValue('invalid json');
 
       const result = loadDrumDefaultSettings();
 
@@ -472,7 +467,7 @@ describe('defaultSettings', () => {
 
   describe('loadMultisampleDefaultSettings', () => {
     it('should return default settings when no custom settings are saved', () => {
-      (cookieUtils.getCookie as any).mockReturnValue(null);
+      (localStore.get as any).mockReturnValue(null);
 
       const result = loadMultisampleDefaultSettings();
 
@@ -494,7 +489,7 @@ describe('defaultSettings', () => {
         filenameSeparator: ' '
       };
 
-      (cookieUtils.getCookie as any).mockReturnValue(JSON.stringify(customSettings));
+      (localStore.get as any).mockReturnValue(JSON.stringify(customSettings));
 
       const result = loadMultisampleDefaultSettings();
 
@@ -507,7 +502,7 @@ describe('defaultSettings', () => {
 
   describe('loadDrumImportedPreset', () => {
     it('should return null when no imported preset is saved', () => {
-      (cookieUtils.getCookie as any).mockReturnValue(null);
+      (localStore.get as any).mockReturnValue(null);
 
       const result = loadDrumImportedPreset();
 
@@ -520,7 +515,7 @@ describe('defaultSettings', () => {
         importedPreset: { engine: { playmode: 'poly' } }
       };
 
-      (cookieUtils.getCookie as any).mockReturnValue(JSON.stringify(savedData));
+      (localStore.get as any).mockReturnValue(JSON.stringify(savedData));
 
       const result = loadDrumImportedPreset();
 
@@ -530,7 +525,7 @@ describe('defaultSettings', () => {
 
   describe('loadMultisampleImportedPreset', () => {
     it('should return null when no imported preset is saved', () => {
-      (cookieUtils.getCookie as any).mockReturnValue(null);
+      (localStore.get as any).mockReturnValue(null);
 
       const result = loadMultisampleImportedPreset();
 
@@ -546,7 +541,7 @@ describe('defaultSettings', () => {
         }
       };
 
-      (cookieUtils.getCookie as any).mockReturnValue(JSON.stringify(savedData));
+      (localStore.get as any).mockReturnValue(JSON.stringify(savedData));
 
       const result = loadMultisampleImportedPreset();
 
@@ -559,25 +554,25 @@ describe('defaultSettings', () => {
 
   describe('hasCustomDefaults', () => {
     it('should return false when no custom drum defaults exist', () => {
-      (cookieUtils.getCookie as any).mockReturnValue(null);
+      (localStore.get as any).mockReturnValue(null);
 
       expect(hasCustomDrumDefaults()).toBe(false);
     });
 
     it('should return true when custom drum defaults exist', () => {
-      (cookieUtils.getCookie as any).mockReturnValue('{"sampleRate": 48000}');
+      (localStore.get as any).mockReturnValue('{"sampleRate": 48000}');
 
       expect(hasCustomDrumDefaults()).toBe(true);
     });
 
     it('should return false when no custom multisample defaults exist', () => {
-      (cookieUtils.getCookie as any).mockReturnValue(null);
+      (localStore.get as any).mockReturnValue(null);
 
       expect(hasCustomMultisampleDefaults()).toBe(false);
     });
 
     it('should return true when custom multisample defaults exist', () => {
-      (cookieUtils.getCookie as any).mockReturnValue('{"sampleRate": 96000}');
+      (localStore.get as any).mockReturnValue('{"sampleRate": 96000}');
 
       expect(hasCustomMultisampleDefaults()).toBe(true);
     });
@@ -587,13 +582,14 @@ describe('defaultSettings', () => {
     it('should clear drum defaults', () => {
       clearDrumDefaults();
 
-      expect(cookieUtils.removeCookie).toHaveBeenCalledWith(COOKIE_KEYS.DRUM_DEFAULT_SETTINGS);
+      expect(localStore.remove).toHaveBeenCalledWith(STORE_KEYS.DRUM_DEFAULT_SETTINGS);
     });
 
     it('should clear multisample defaults', () => {
       clearMultisampleDefaults();
 
-      expect(cookieUtils.removeCookie).toHaveBeenCalledWith(COOKIE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
+      expect(localStore.remove).toHaveBeenCalledWith(STORE_KEYS.MULTISAMPLE_DEFAULT_SETTINGS);
     });
   });
 }); 
+

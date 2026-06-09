@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CACHE_BACKED_SET_INDEX, MOCK_SETS } from '../data/mockSets';
 import type { SetSummary } from '../types/sync';
 import type { SyncCockpit } from './useSyncCockpit';
-
-const DEVICE_USAGE = { presets: 2.1, samples: 3.2, projects: 0.4, other: 1.7 };
 
 export type SetLibrary = ReturnType<typeof useSetLibrary>;
 

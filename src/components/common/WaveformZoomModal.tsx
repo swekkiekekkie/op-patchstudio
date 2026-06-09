@@ -653,7 +653,7 @@ export function WaveformZoomModal({
 
   const handleSaveForAll = () => {
     const { sampleRate } = audioBuffer!;
-    const payload: any = {
+    const payload: Partial<DrumSample> & Partial<MultisampleFile> = {
       inPoint: inFrame / sampleRate,
       outPoint: outFrame / sampleRate,
     };

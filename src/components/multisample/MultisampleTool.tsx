@@ -18,8 +18,17 @@ import { ToggleSwitch } from '../common/ToggleSwitch';
 import { saveMultisampleSettingsAsDefault } from '../../utils/defaultSettings';
 import { AUDIO_CONSTANTS } from '../../utils/constants';
 
+declare global {
+  interface Window {
+    opPatchstudioActiveNotes?: string[];
+  }
+}
 
-export function MultisampleTool() {
+interface MultisampleToolProps {
+  embedded?: boolean;
+}
+
+export function MultisampleTool({ embedded = false }: MultisampleToolProps) {
   const { state, dispatch } = useAppContext();
   const { handleMultisampleUpload, clearMultisampleFile } = useFileUpload();
   const { generateMultisamplePatchFile } = usePatchGeneration();
@@ -391,7 +400,7 @@ export function MultisampleTool() {
     // We'll try all possible noteIds for this midiNote
     // (e.g., multisample-60, multisample-60-<timestamp>)
     // For robust release, release all notes that start with `multisample-${midiNote}`
-    const activeNotes = (window as any).opPatchstudioActiveNotes || [];
+    const activeNotes = window.opPatchstudioActiveNotes || [];
     if (Array.isArray(activeNotes)) {
       activeNotes
         .filter((id: string) => id.startsWith(`multisample-${midiNote}`))
@@ -441,13 +450,17 @@ export function MultisampleTool() {
   );
 
   return (
-    <div style={{ 
-      fontFamily: '"Montserrat", "Arial", sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%'
-    }}>
-      <CacheEditorContextBar />
+    <div
+      className={embedded ? 'patch-editor patch-editor--embedded' : undefined}
+      style={{
+        fontFamily: embedded ? 'inherit' : '"Montserrat", "Arial", sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+      }}
+    >
+      {!embedded ? <CacheEditorContextBar /> : null}
 
       {/* Header Section */}
 
@@ -462,8 +475,8 @@ export function MultisampleTool() {
       />
 
       {/* Virtual MIDI Keyboard Section */}
-      <div style={{
-        padding: isMobile ? '1rem 0.5rem' : '2rem 2rem',
+      <div className={embedded ? 'embedded-editor-keyboard' : undefined} style={{
+        padding: embedded ? 0 : (isMobile ? '1rem 0.5rem' : '2rem 2rem'),
       }}>
         <ErrorDisplay message={state.error || ''} />
 
@@ -488,22 +501,24 @@ export function MultisampleTool() {
       </div>
 
       {/* Tabbed Content Area */}
-      <div style={{ 
+      <div className={embedded ? 'embedded-editor-samples' : undefined} style={{
         flex: 1,
-        padding: isMobile ? '0 0.5rem' : '0 2rem',
-        marginBottom: '1rem'
+        minHeight: 0,
+        padding: embedded ? 0 : (isMobile ? '0 0.5rem' : '0 2rem'),
+        marginBottom: embedded ? 0 : '1rem'
       }}>
         {/* Sample Management Section */}
-        <div style={{
+        <div className={embedded ? 'embedded-sample-panel' : undefined} style={{
           background: 'var(--color-bg-primary)',
-          borderRadius: '15px',
-          boxShadow: '0 2px 8px var(--color-shadow-primary)',
+          borderRadius: embedded ? 0 : '15px',
+          boxShadow: embedded ? 'none' : '0 2px 8px var(--color-shadow-primary)',
           border: '1px solid var(--color-border-subtle)',
           overflow: 'hidden',
-          marginBottom: '1rem',
+          marginBottom: embedded ? 0 : '1rem',
+          height: embedded ? '100%' : undefined,
         }}>
           {/* Header */}
-          <div style={{
+          {!embedded ? <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -536,10 +551,10 @@ export function MultisampleTool() {
                 }}
               />
             </div>
-          </div>
+          </div> : null}
 
           {/* Content */}
-          <div style={{ 
+          <div className={embedded ? 'embedded-sample-panel-body' : undefined} style={{
             padding: 0,
           }}>
             <MultisampleSampleTable 
@@ -548,9 +563,10 @@ export function MultisampleTool() {
               onRecordSample={handleOpenRecording}
               onFilesSelected={handleFilesSelected}
               onBrowseFilesRef={browseFilesRef}
+              embedded={embedded}
             />
             {/* Footer Button Group - Drum Tool Style */}
-            <div
+            {!embedded ? <div
               style={{
                 display: 'flex',
                 justifyContent: 'flex-end',
@@ -673,11 +689,13 @@ export function MultisampleTool() {
                 <i className="fas fa-folder-open" style={{ fontSize: '1rem' }}></i>
                 browse
               </button>
-            </div>
+            </div> : null}
           </div>
         </div>
       </div>
 
+      {embedded ? null : (
+        <>
       {/* Preset Settings Panel - Always Visible */}
       <div style={{
         padding: isMobile ? '0 0.5rem' : '0 2rem',
@@ -743,6 +761,8 @@ export function MultisampleTool() {
           onAudioFormatChange={(format) => dispatch({ type: 'SET_MULTISAMPLE_AUDIO_FORMAT', payload: format })}
         />
       </div>
+        </>
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal

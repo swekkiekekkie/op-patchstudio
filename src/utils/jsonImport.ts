@@ -1,9 +1,10 @@
 // JSON import utilities for OP-XY preset files
 import { deepMerge, internalToPercent } from './valueConversions';
+import type { JsonObject } from './valueConversions';
 import type { AppState } from '../context/AppContext';
 
 // Types for imported JSON structures
-interface ImportedEngineSettings {
+interface ImportedEngineSettings extends JsonObject {
   playmode?: string;
   transpose?: number;
   'velocity.sensitivity'?: number;
@@ -15,11 +16,11 @@ interface ImportedEngineSettings {
   'tuning.root'?: number;
 }
 
-interface ImportedPresetJson {
+export interface ImportedPresetJson extends JsonObject {
   engine?: ImportedEngineSettings;
-  envelope?: any;
-  fx?: any;
-  lfo?: any;
+  envelope?: JsonObject;
+  fx?: JsonObject;
+  lfo?: JsonObject;
   octave?: number;
   name?: string;
   type?: string;
@@ -52,7 +53,7 @@ export function importDrumPresetJson(
       const presetSettings = { ...currentState.drumSettings.presetSettings };
 
       if (engine.playmode) {
-        presetSettings.playmode = engine.playmode as any;
+        presetSettings.playmode = engine.playmode as AppState['drumSettings']['presetSettings']['playmode'];
       }
       if (typeof engine.transpose === 'number') {
         presetSettings.transpose = engine.transpose;
@@ -71,7 +72,7 @@ export function importDrumPresetJson(
     }
 
     // Store the full imported JSON for later merging during patch generation
-    (updates as any).importedDrumPresetJson = importedJson;
+    updates.importedDrumPreset = importedJson;
 
     return updates;
   } catch (error) {
@@ -104,7 +105,7 @@ export function importMultisamplePresetJson(
     // For now, just store the imported JSON for later merging
 
     // Store the full imported JSON for later merging during patch generation
-    (updates as any).importedMultisamplePresetJson = importedJson;
+    updates.importedMultisamplePreset = importedJson;
 
     return updates;
   } catch (error) {
@@ -113,7 +114,7 @@ export function importMultisamplePresetJson(
 }
 
 // Merge imported preset settings with base JSON during patch generation
-export function mergeImportedDrumSettings(baseJson: any, importedJson?: ImportedPresetJson): void {
+export function mergeImportedDrumSettings(baseJson: JsonObject, importedJson?: ImportedPresetJson | null): void {
   if (!importedJson) return;
 
   // Merge sections that should be preserved from imported preset
@@ -122,13 +123,13 @@ export function mergeImportedDrumSettings(baseJson: any, importedJson?: Imported
   sectionsToMerge.forEach(section => {
     if (importedJson[section as keyof ImportedPresetJson]) {
       if (!baseJson[section]) baseJson[section] = {};
-      deepMerge(baseJson[section], importedJson[section as keyof ImportedPresetJson]);
+      deepMerge(baseJson[section] as JsonObject, importedJson[section as keyof ImportedPresetJson] as JsonObject);
     }
   });
 }
 
 // Merge imported multisample settings with base JSON during patch generation
-export function mergeImportedMultisampleSettings(baseJson: any, importedJson?: ImportedPresetJson): void {
+export function mergeImportedMultisampleSettings(baseJson: JsonObject, importedJson?: ImportedPresetJson | null): void {
   if (!importedJson) return;
 
   // Merge sections that should be preserved from imported preset
@@ -137,7 +138,7 @@ export function mergeImportedMultisampleSettings(baseJson: any, importedJson?: I
   sectionsToMerge.forEach(section => {
     if (importedJson[section as keyof ImportedPresetJson]) {
       if (!baseJson[section]) baseJson[section] = {};
-      deepMerge(baseJson[section], importedJson[section as keyof ImportedPresetJson]);
+      deepMerge(baseJson[section] as JsonObject, importedJson[section as keyof ImportedPresetJson] as JsonObject);
     }
   });
 }
@@ -160,7 +161,7 @@ export function validatePresetJson(jsonContent: string): { isValid: boolean; typ
     }
     
     return { isValid: true, type: json.type };
-  } catch (error) {
+  } catch {
     return { isValid: false, error: 'Invalid JSON format' };
   }
 } 

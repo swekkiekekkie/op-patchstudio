@@ -8,6 +8,7 @@ import { localStore, STORE_KEYS } from '../utils/localStore';
 import type { FilenameSeparator } from '../utils/constants';
 import { loadDrumDefaultSettings, loadMultisampleDefaultSettings, loadDrumImportedPreset, loadMultisampleImportedPreset } from '../utils/defaultSettings';
 import { applyZeroCrossingToMarkers } from '../utils/audio';
+import type { ImportedPresetJson } from '../utils/jsonImport';
 
 // Define enhanced types for the application state
 export interface DrumSample {
@@ -141,8 +142,8 @@ export interface AppState {
   notifications: Notification[];
   
   // Imported preset settings (for patch generation)
-  importedDrumPreset: any | null;
-  importedMultisamplePreset: any | null;
+  importedDrumPreset: ImportedPresetJson | null;
+  importedMultisamplePreset: ImportedPresetJson | null;
 
   // MIDI note mapping convention
   midiNoteMapping: 'C3' | 'C4';
@@ -223,15 +224,28 @@ export type AppAction =
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'ADD_NOTIFICATION'; payload: Notification }
   | { type: 'REMOVE_NOTIFICATION'; payload: string }
-  | { type: 'SET_IMPORTED_DRUM_PRESET'; payload: any | null }
-  | { type: 'SET_IMPORTED_MULTISAMPLE_PRESET'; payload: any | null }
+  | { type: 'SET_IMPORTED_DRUM_PRESET'; payload: ImportedPresetJson | null }
+  | { type: 'SET_IMPORTED_MULTISAMPLE_PRESET'; payload: ImportedPresetJson | null }
   | { type: 'TOGGLE_DRUM_KEYBOARD_PIN' }
   | { type: 'TOGGLE_MULTISAMPLE_KEYBOARD_PIN' }
   | { type: 'SET_MIDI_NOTE_MAPPING'; payload: 'C3' | 'C4' }
   | { type: 'UPDATE_ALL_MULTI_SAMPLES'; payload: Partial<MultisampleFile> }
   | { type: 'UPDATE_ALL_DRUM_SAMPLES'; payload: Partial<DrumSample> }
   | { type: 'CLEAR_ALL_DRUM_SAMPLES' }
-  | { type: 'SET_CACHE_SOURCE'; payload: CacheSource | null };
+  | { type: 'SET_CACHE_SOURCE'; payload: CacheSource | null }
+  | {
+      type: 'RESTORE_SESSION';
+      payload: Pick<
+        AppState,
+        | 'drumSettings'
+        | 'multisampleSettings'
+        | 'drumSamples'
+        | 'multisampleFiles'
+        | 'selectedMultisample'
+        | 'isDrumKeyboardPinned'
+        | 'isMultisampleKeyboardPinned'
+      >;
+    };
 
 // Initial state for drum samples
 const initialDrumSample: DrumSample = {
@@ -328,6 +342,49 @@ const initialState: AppState = {
 // Enhanced reducer function
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case 'RESTORE_SESSION': {
+      const payloadDrumSamples = action.payload.drumSamples as Array<DrumSample & { originalIndex?: number }>;
+      const highestOriginalIndex = payloadDrumSamples.reduce(
+        (highest, sample, fallbackIndex) => Math.max(highest, sample.originalIndex ?? fallbackIndex),
+        23
+      );
+      const restoredDrumSamples: DrumSample[] = Array.from(
+        { length: Math.max(24, highestOriginalIndex + 1) },
+        (_, index) => createDrumSample(index, index < 24)
+      );
+
+      payloadDrumSamples.forEach((sample, fallbackIndex) => {
+        restoredDrumSamples[sample.originalIndex ?? fallbackIndex] = sample;
+      });
+
+      const requiredLength = Math.max(24, restoredDrumSamples.length);
+
+      for (let index = 0; index < requiredLength; index++) {
+        const restoredSample = restoredDrumSamples[index];
+        if (restoredSample) {
+          restoredDrumSamples[index] = {
+            ...restoredSample,
+            isAssigned: index < 24 ? restoredSample.isAssigned !== false : restoredSample.isAssigned,
+            assignedKey: index < 24 && restoredSample.isAssigned !== false ? (restoredSample.assignedKey ?? index) : restoredSample.assignedKey,
+          };
+          continue;
+        }
+
+        restoredDrumSamples[index] = createDrumSample(index, index < 24);
+      }
+
+      return {
+        ...state,
+        drumSettings: action.payload.drumSettings,
+        multisampleSettings: action.payload.multisampleSettings,
+        drumSamples: restoredDrumSamples,
+        multisampleFiles: action.payload.multisampleFiles,
+        selectedMultisample: action.payload.selectedMultisample,
+        isDrumKeyboardPinned: action.payload.isDrumKeyboardPinned,
+        isMultisampleKeyboardPinned: action.payload.isMultisampleKeyboardPinned,
+      };
+    }
+
     case 'SET_TAB':
       if (action.payload === 'device') {
         try {
@@ -968,7 +1025,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'IMPORT_OP1_DRUM_PRESET': {
       // Start with existing drum samples
       const newDrumSamples = [...state.drumSamples];
-      let samplesAddedAsUnassigned = 0;
       
       // Find the first available empty slot in the 0-23 range
       const findFirstEmptySlot = (samples: DrumSample[]): number | null => {
@@ -1032,7 +1088,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
             hasBeenEdited: false
           };
           newDrumSamples.push(unassignedSample);
-          samplesAddedAsUnassigned++;
         }
       }
       
@@ -1076,7 +1131,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       } else {
         // Try to extract from filename - look for note pattern at the end
         try {
-          const [_, midiFromParse] = parseFilename(action.payload.file.name, state.midiNoteMapping);
+          const [, midiFromParse] = parseFilename(action.payload.file.name, state.midiNoteMapping);
           if (midiFromParse >= 0 && midiFromParse <= 127) {
             detectedMidiNote = midiFromParse;
             detectedNote = midiNoteToString(midiFromParse, state.midiNoteMapping);

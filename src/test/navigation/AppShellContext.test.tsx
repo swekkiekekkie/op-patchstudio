@@ -44,6 +44,40 @@ describe('AppShellContext', () => {
     expect(result.current.state.presetPath).toBe('drums/kick.preset');
   });
 
+  it('navigate to presets with search sets presetSearchQuery and clears direct path', () => {
+    const { result } = renderHook(() => useAppShell(), { wrapper });
+
+    act(() => {
+      result.current.navigate({ mode: 'presets', presetPath: 'drums/kick.preset' });
+    });
+    act(() => {
+      result.current.navigate({
+        mode: 'presets',
+        presetPath: null,
+        presetSearchQuery: 'nt-accord',
+      });
+    });
+
+    expect(result.current.state.mode).toBe('presets');
+    expect(result.current.state.presetPath).toBeNull();
+    expect(result.current.state.presetSearchQuery).toBe('nt-accord');
+  });
+
+  it('supports preset overview submode navigation', () => {
+    const { result } = renderHook(() => useAppShell(), { wrapper });
+
+    act(() => {
+      result.current.navigate({
+        mode: 'presets',
+        presetPath: 'drums/kick.preset',
+        presetSubmode: 'overview',
+      });
+    });
+
+    expect(result.current.state.mode).toBe('presets');
+    expect(result.current.state.presetSubmode).toBe('overview');
+  });
+
   it('cross-mode navigation preserves mode-specific selection', () => {
     const { result } = renderHook(() => useAppShell(), { wrapper });
 

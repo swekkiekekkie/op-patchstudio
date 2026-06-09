@@ -214,7 +214,7 @@ function parseSmplChunk(dataView: DataView, sampleRate: number, duration: number
       if (parsed && parsed.length > 1) {
         midiNote = parsed[1];
       }
-    } catch (_) {
+    } catch {
       // ignore filename parsing errors
     }
   }
@@ -871,7 +871,7 @@ export function generateFilename(
       'KD1', 'KD2', 'SD1', 'SD2', 'RIM', 'CLP', 'TB', 'SH', 'CH', 'CL1', 'OH', 'CAB',
       'LT1', 'RC', 'MT', 'CC', 'HT', 'COW', 'TRI', 'LT2', 'LC', 'WS', 'HC', 'GUI'
     ];
-    let drumLabel = drumShortLabels[index] || `DRUM${index + 1}`;
+    const drumLabel = drumShortLabels[index] || `DRUM${index + 1}`;
     
     return `${cleanPresetName}${separator}${drumLabel}.${extension}`;
   } else {

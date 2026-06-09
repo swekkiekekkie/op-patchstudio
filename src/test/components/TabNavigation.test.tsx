@@ -1,14 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TabNavigation } from '../../components/common/TabNavigation';
-import { FEATURE_FLAGS } from '../../utils/constants';
-
-// Mock FEATURE_FLAGS
-vi.mock('../../utils/constants', () => ({
-  FEATURE_FLAGS: {
-    DONATE_PAGE: true
-  }
-}));
 
 describe('TabNavigation', () => {
   const mockOnTabChange = vi.fn();
@@ -27,7 +19,7 @@ describe('TabNavigation', () => {
     
     // Check that all tabs are present
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(5); // drum, multisample, library, donate, feedback
+    expect(tabs).toHaveLength(3); // device, drum, multisample
     
     // Check that each tab has proper ARIA attributes
     tabs.forEach(tab => {
@@ -63,9 +55,9 @@ describe('TabNavigation', () => {
     
     vi.clearAllMocks();
     
-    // Test left arrow (should wrap to feedback)
+    // Test left arrow
     fireEvent.keyDown(drumTab, { key: 'ArrowLeft' });
-    expect(mockOnTabChange).toHaveBeenCalledWith('feedback');
+    expect(mockOnTabChange).toHaveBeenCalledWith('device');
   });
 
   it('should handle Home and End key navigation', () => {
@@ -75,13 +67,13 @@ describe('TabNavigation', () => {
     
     // Test Home key
     fireEvent.keyDown(multisampleTab, { key: 'Home' });
-    expect(mockOnTabChange).toHaveBeenCalledWith('drum');
+    expect(mockOnTabChange).toHaveBeenCalledWith('device');
     
     vi.clearAllMocks();
     
     // Test End key
     fireEvent.keyDown(multisampleTab, { key: 'End' });
-    expect(mockOnTabChange).toHaveBeenCalledWith('feedback');
+    expect(mockOnTabChange).toHaveBeenCalledWith('multisample');
   });
 
   it('should handle Enter and Space key activation', () => {
@@ -116,20 +108,14 @@ describe('TabNavigation', () => {
     expect(multisampleTab).toHaveStyle({ color: 'var(--color-text-secondary)' });
   });
 
-  it('should respect feature flags for donate page', () => {
-    // Mock FEATURE_FLAGS to disable donate page
-    (vi.mocked(FEATURE_FLAGS) as any).DONATE_PAGE = false;
-    
+  it('should render only current app tabs', () => {
     render(<TabNavigation currentTab="drum" onTabChange={mockOnTabChange} />);
     
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(4); // drum, multisample, library, feedback (no donate)
+    expect(tabs).toHaveLength(3);
     
-    // Check that donate tab is not present
     expect(screen.queryByRole('tab', { name: 'donate tab' })).not.toBeInTheDocument();
-    
-    // Reset mock
-    (vi.mocked(FEATURE_FLAGS) as any).DONATE_PAGE = true;
+    expect(screen.queryByRole('tab', { name: 'feedback tab' })).not.toBeInTheDocument();
   });
 
   it('should ensure minimum touch target size', () => {

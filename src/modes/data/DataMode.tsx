@@ -1,6 +1,5 @@
 import type { SetLibrary } from '../../hooks/useSetLibrary';
 import type { SyncCockpit } from '../../hooks/useSyncCockpit';
-import { DEVICE_USAGE } from '../../data/mockSets';
 import { DevicePane } from './DevicePane';
 import { SetsPane, TransferRow } from './SetsPane';
 
@@ -10,8 +9,6 @@ interface DataModeProps {
 }
 
 export function DataMode({ sync, library }: DataModeProps) {
-  const deviceUsage = sync.connected ? DEVICE_USAGE : null;
-
   const handlePush = async () => {
     await sync.push();
   };
@@ -19,7 +16,7 @@ export function DataMode({ sync, library }: DataModeProps) {
   return (
     <section className="screen screen-data">
       <div className="data-stack">
-        <DevicePane sync={sync} deviceUsage={deviceUsage} />
+        <DevicePane sync={sync} />
         <TransferRow sync={sync} library={library} onConfirmPush={() => void handlePush()} />
         <SetsPane sync={sync} library={library} />
       </div>

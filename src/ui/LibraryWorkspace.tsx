@@ -3,14 +3,28 @@ export interface LibraryWorkspaceProps {
   detail: React.ReactNode;
   empty?: React.ReactNode;
   showDetail?: boolean;
+  /** Hide list pane — detail takes full width (preset edit submode). */
+  detailExpanded?: boolean;
 }
 
-export function LibraryWorkspace({ list, detail, empty, showDetail = false }: LibraryWorkspaceProps) {
-  const workspaceClass = showDetail ? 'library-workspace library-workspace--split' : 'library-workspace';
+export function LibraryWorkspace({
+  list,
+  detail,
+  empty,
+  showDetail = false,
+  detailExpanded = false,
+}: LibraryWorkspaceProps) {
+  const workspaceClass = [
+    'library-workspace',
+    showDetail && !detailExpanded ? 'library-workspace--split' : '',
+    detailExpanded ? 'library-workspace--detail-expanded' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className={workspaceClass}>
-      <div className="library-list-pane">{list}</div>
+      {!detailExpanded ? <div className="library-list-pane">{list}</div> : null}
       {showDetail ? (
         <div className="library-detail-pane">{detail ?? empty}</div>
       ) : (

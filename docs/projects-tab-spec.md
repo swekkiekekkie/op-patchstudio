@@ -1,7 +1,7 @@
 # Projects tab — UI/UX & functionality spec
 
 **Status:** Arrange UI prototyped in [opxy-shell-prototype.html](./prototypes/opxy-shell-prototype.html); parsing not started  
-**Parent docs:** [design-direction.md](./design-direction.md), [data-tab-spec.md](./data-tab-spec.md), [ui-ux-audit.md](./ui-ux-audit.md)  
+**Parent docs:** [design-direction.md](./design-direction.md), [product-decisions.md](./product-decisions.md), [compact-ui-ux-principles.md](./compact-ui-ux-principles.md), [data-tab-spec.md](./data-tab-spec.md), [ui-ux-audit.md](./ui-ux-audit.md)  
 **Reference:** [reference_material/xy-format/](../reference_material/xy-format/) — `.xy` reverse engineering  
 **Last updated:** 2026-06-06
 
@@ -9,12 +9,12 @@
 
 ## Purpose
 
-The **projects** tab is where the user opens `.xy` project files and understands **arrangement** — how patterns on each track are combined into **scenes**.
+The **projects** tab is where the user opens `.xy` project files and understands **arrangement** — how preset configurations in track pattern slots are combined into **scenes**.
 
 It answers:
 
 - Which projects exist on the active set / device?
-- For this project, what **patterns** exist per track (up to 9)?
+- For this project, what **pattern-config slots** exist per track (up to 9)?
 - For the selected **scene**, which pattern is each track playing?
 - What **preset / engine** does each pattern use on each track?
 
@@ -24,13 +24,15 @@ It also remains the hub for **sample reference integrity** (missing files, renam
 
 | In scope | Out of scope (later) |
 |----------|----------------------|
-| Pattern inventory per track (1–9) | **Song mode** — scene order, loop, 96-scene chains |
-| Scene list + selected scene | Full mix snapshot editing (volume/mute/pan/sends) |
-| Per-scene pattern assignment (16 tracks) | Live pattern copy/paste/new/clear (device parity) |
+| Pattern-config inventory per track (1–9) | **Song mode** — scene order, loop, 96-scene chains |
+| Scene list + selected scene when decoded | Full mix snapshot editing (volume/mute/pan/sends) |
+| Per-scene pattern assignment display when decoded | Live pattern copy/paste/new/clear (device parity) |
 | Preset/engine label per pattern block | Sound link toggle (binary unknown) |
 | Read-only arrange view first | Writing `.xy` scene/pattern assignments |
 
-**Hierarchy (manual):** project → scenes → pattern picks per track. **Songs** sequence scenes; deferred.
+**Hierarchy (manual):** project → scenes → pattern-config picks per track. **Songs** sequence scenes; deferred.
+
+Terminology rule: in this app, **pattern** means the OP-XY track/pattern slot and its stored preset configuration. It does not mean note authoring. Note counts may appear as metadata only.
 
 ---
 
@@ -87,7 +89,7 @@ Summary after inspecting `reference_material/xy-format/` (docs, `xy/`, `tools/`)
 | Pattern count per track (1–9) | Leader preamble `byte[1]` | `pattern_count` on first block of track |
 | Pattern length (bars) | Preamble `byte[2]` | `bar_count = pre2 >> 4` |
 | Engine ID per pattern block | `TrackBlock.engine_id` | Drum, Prism, EPiano, … |
-| Note events per pattern | `xy/note_events.py`, `tools/inspect_xy.py` | Common types; preset-specific event type |
+| Note count per pattern | `xy/note_events.py`, `tools/inspect_xy.py` | Metadata only; no note editing UI |
 | Tempo, groove, metronome | Header @ `0x18` | `inspect_xy.py` report |
 | Multi-pattern topology | `docs/format/descriptor_encoding.md`, `multi_pattern_block_rotation.md` | Block rotation + T16 overflow |
 
@@ -100,7 +102,7 @@ Example logical entry (what we can build today):
   "pattern_count": 4,
   "engine": { "id": "0x12", "name": "Prism" },
   "bars": 1,
-  "notes": [{ "step": 2, "note": 60, "velocity": 100 }],
+  "noteCount": 1,
   "active": true
 }
 ```
@@ -206,7 +208,7 @@ Keep list + detail split from prototype, replace generic “sample refs only” 
 ├──────────────────┴──────────────────────────────────────────┤
 │ sample refs · 42 indexed · 1 missing          [expand]       │
 └─────────────────────────────────────────────────────────────┘
-│ data │ proj │ pre │ smp │
+│ sets │ projects │ presets │ library │
 ```
 
 ### Track columns (match device grammar)
@@ -239,6 +241,7 @@ Device bottom row (`new` / `copy` / `paste` / `clear`) **not in v1**. When editi
 
 - Read-only inspect first.
 - Edits require explicit write + xy-format safe writer — likely long after read UI.
+- If scene data is not decoded, keep the arrange pane visible with `scene data unavailable` and show pattern inventory only.
 
 ---
 
@@ -259,7 +262,7 @@ From global design system — projects background `#33383b`:
 ### Phase 0 — Document + mock (now)
 
 - [x] This spec
-- [ ] Extend `opxy-shell-prototype.html` projects screen with static arrange grid + mock scene/pattern/preset data
+- [x] `opxy-shell-prototype.html` includes static arrange grid + mock scene/pattern/preset data
 
 ### Phase 1 — Read pattern inventory
 
@@ -296,6 +299,7 @@ From global design system — projects background `#33383b`:
 | Multi-pattern rules | `docs/format/descriptor_encoding.md` |
 | Scene/song probes | `docs/format/scenes_songs.md` |
 | Limits (9 pat, 99 scenes) | `docs/reference/opxy_limits.md` |
+| User capture checklist | [xy-format-probe-projects.md](./xy-format-probe-projects.md) |
 | Target JSON shape | `docs/engineering/json_project_spec_complete.md` |
 | Corpus test files | `reference_material/xy-format/src/` (unnamed *.xy) |
 
@@ -306,7 +310,7 @@ From global design system — projects background `#33383b`:
 1. **16 columns vs 8+8** — show all 16 tracks scrolled horizontally, or 8 instrument + toggle aux row?
 2. **Pattern display** — vertical stack (like tape in photo) vs single highlighted cell per column?
 3. **Scene picker** — grid 1–99, scroll list, or only prev/next at first?
-4. **Undecoded scenes** — show “scene data unavailable” with pattern inventory only, or hide projects tab arrange until Phase 2?
+4. **Undecoded scenes visual treatment** — exact compact styling for `scene data unavailable` state.
 5. **Preset name fallback** — engine default label when patch string missing?
 6. **Project list sort** — filename, recent, missing-sample count?
 
@@ -321,7 +325,7 @@ The [opxy-shell-prototype.html](./prototypes/opxy-shell-prototype.html) **projec
 - 16-track grid with **inst / aux / all** filter
 - Pattern cells per track (1–9); **scene-active** cell highlighted
 - Preset name for the active pattern per track
-- Click pattern cell to change scene assignment (mock edit)
+- Click pattern cell to change scene assignment (mock edit only; production starts read-only)
 - Collapsible sample refs footer
 
 Mock data only — no `.xy` parsing.

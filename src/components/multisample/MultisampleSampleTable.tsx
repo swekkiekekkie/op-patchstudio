@@ -5,6 +5,7 @@ import { SmallWaveform } from '../common/SmallWaveform';
 import { EnhancedTooltip } from '../common/EnhancedTooltip';
 import { WaveformZoomModal } from '../common/WaveformZoomModal';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
+import { ActionButton, ClearIcon, PlayIcon } from '../../ui';
 
 import { midiNoteToString, noteStringToMidiValue } from '../../utils/audio';
 
@@ -15,6 +16,20 @@ interface MultisampleSampleTableProps {
   onRecordSample: (index: number) => void;
   onFilesSelected: (files: File[]) => void;
   onBrowseFilesRef?: React.MutableRefObject<(() => void) | null>;
+  embedded?: boolean;
+}
+
+interface FileSystemEntryLike {
+  isFile: boolean;
+  isDirectory: boolean;
+  name?: string;
+  file?: (successCallback: (file: File) => void, errorCallback?: (error: DOMException) => void) => void;
+  createReader?: () => {
+    readEntries: (
+      successCallback: (entries: FileSystemEntryLike[]) => void,
+      errorCallback?: (error: DOMException) => void
+    ) => void;
+  };
 }
 
 // Theme colour shortcuts for readability
@@ -56,7 +71,8 @@ export function MultisampleSampleTable({
   onClearSample,
   onRecordSample,
   onFilesSelected,
-  onBrowseFilesRef
+  onBrowseFilesRef,
+  embedded = false,
 }: MultisampleSampleTableProps) {
   const { state, dispatch } = useAppContext();
   const { playWithADSR, releaseNote } = useAudioPlayer();
@@ -127,7 +143,7 @@ export function MultisampleSampleTable({
       
       // Process all dropped items in parallel
       const processingPromises = items.map(item => {
-        const entry = item.webkitGetAsEntry();
+        const entry = item.webkitGetAsEntry() as FileSystemEntryLike | null;
         if (entry) {
           return processEntry(entry, files);
         }
@@ -178,9 +194,9 @@ export function MultisampleSampleTable({
     }
   };
 
-  const processEntry = async (entry: any, files: File[]): Promise<void> => {
+  const processEntry = async (entry: FileSystemEntryLike, files: File[]): Promise<void> => {
     try {
-      if (entry.isFile) {
+      if (entry.isFile && entry.file) {
         const file = await new Promise<File>((resolve, reject) => {
           entry.file((file: File) => {
             if (file) {
@@ -188,22 +204,22 @@ export function MultisampleSampleTable({
             } else {
               reject(new Error('Failed to get file from entry'));
             }
-          });
+          }, reject);
         });
         files.push(file);
-      } else if (entry.isDirectory) {
+      } else if (entry.isDirectory && entry.createReader) {
         const reader = entry.createReader();
         
         // Read all entries from the directory
-        const readEntries = (): Promise<any[]> => {
+        const readEntries = (): Promise<FileSystemEntryLike[]> => {
           return new Promise((resolve, reject) => {
-            reader.readEntries((entries: any[]) => {
+            reader.readEntries((entries) => {
               if (entries && entries.length > 0) {
                 resolve(entries);
               } else {
                 resolve([]);
               }
-            }, (error: any) => {
+            }, (error) => {
               console.error('Error reading directory entries:', error);
               reject(error);
             });
@@ -211,7 +227,7 @@ export function MultisampleSampleTable({
         };
         
         // Read all entries recursively (handle large directories)
-        let allEntries: any[] = [];
+        let allEntries: FileSystemEntryLike[] = [];
         let hasMore = true;
         
         while (hasMore) {
@@ -458,7 +474,7 @@ export function MultisampleSampleTable({
     );
     
     if (audioFile) {
-      handleFileInputChange(index, { target: { files: [audioFile] } } as any);
+      onFileUpload(index, audioFile);
     }
   };
 
@@ -917,14 +933,16 @@ export function MultisampleSampleTable({
                   onDragEnd={handleDragEnd}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '100px minmax(200px, 1fr) minmax(200px, 1fr) 120px',
+                    gridTemplateColumns: embedded
+                      ? '88px minmax(150px, 0.45fr) minmax(180px, 1fr) 96px'
+                      : '100px minmax(200px, 1fr) minmax(200px, 1fr) 120px',
                     gap: '0.5rem',
                     padding: 0, // Remove row padding
                     background: isDraggedOver ? c.bgAlt : c.bg,
                     borderBottom: reversedIndex < state.multisampleFiles.length - 1 ? `1px solid ${c.border}` : 'none',
                     transition: 'background 0.2s ease',
                     alignItems: 'center',
-                    minHeight: '54px',
+                    minHeight: embedded ? '44px' : '54px',
                     opacity: isDragging ? 0.5 : 1,
                     cursor: sample?.isLoaded ? 'move' : 'default'
                   }}
@@ -962,20 +980,20 @@ export function MultisampleSampleTable({
                           onMouseDown={(e) => e.stopPropagation()}
                           placeholder="C4 or 60"
                           style={{
-                            width: '80px',
-                            padding: '0.25rem 0.375rem',
+                            width: embedded ? '58px' : '80px',
+                            padding: embedded ? '0.15rem 0.25rem' : '0.25rem 0.375rem',
                             border: `1px solid ${c.border}`,
                             borderRadius: '3px',
-                            fontSize: '0.875rem',
+                            fontSize: embedded ? '0.72rem' : '0.875rem',
                             fontFamily: 'monospace',
                             textAlign: 'center',
                             marginBottom: '0.125rem',
                             fontWeight: '600'
                           }}
                         />
-                        <div style={{ fontSize: '0.7rem', color: c.textSecondary }}>
+                        {!embedded ? <div style={{ fontSize: '0.7rem', color: c.textSecondary }}>
                           midi {sample.rootNote || 60}
-                        </div>
+                        </div> : null}
                       </div>
                     ) : (
                       <div style={{ textAlign: 'center', color: c.textSecondary }}>-</div>
@@ -992,7 +1010,7 @@ export function MultisampleSampleTable({
                         gap: '0.15rem'
                       }}>
                         <div style={{
-                          fontSize: '0.8rem',
+                          fontSize: embedded ? '0.72rem' : '0.8rem',
                           fontWeight: '500',
                           color: c.text,
                           wordBreak: 'break-word',
@@ -1000,19 +1018,21 @@ export function MultisampleSampleTable({
                         }}>
                           {sample.name}
                         </div>
-                        <FileDetailsBadges
-                          duration={sample.duration}
-                          fileSize={sample.fileSize}
-                          channels={sample.originalChannels}
-                          bitDepth={sample.originalBitDepth}
-                          sampleRate={sample.originalSampleRate}
-                          isFloat={sample.isFloat}
-                        />
+                        {!embedded ? (
+                          <FileDetailsBadges
+                            duration={sample.duration}
+                            fileSize={sample.fileSize}
+                            channels={sample.originalChannels}
+                            bitDepth={sample.originalBitDepth}
+                            sampleRate={sample.originalSampleRate}
+                            isFloat={sample.isFloat}
+                          />
+                        ) : null}
                       </div>
 
                       {/* Waveform Column */}
                       <div style={{
-                        height: '44px',
+                        height: embedded ? '34px' : '44px',
                         display: 'flex',
                         alignItems: 'center',
                         paddingRight: '8px'
@@ -1020,7 +1040,7 @@ export function MultisampleSampleTable({
                         {sample.audioBuffer ? (
                           <SmallWaveform
                             audioBuffer={sample.audioBuffer}
-                            height={44}
+                            height={embedded ? 34 : 44}
                             inPoint={Math.floor((sample.inPoint || 0) * sample.audioBuffer.sampleRate)}
                             outPoint={Math.floor((sample.outPoint || sample.audioBuffer.duration) * sample.audioBuffer.sampleRate)}
                             loopStart={Math.floor((sample.loopStart || 0) * sample.audioBuffer.sampleRate)}
@@ -1047,7 +1067,7 @@ export function MultisampleSampleTable({
                         ) : (
                           <div style={{
                             width: '100%',
-                            height: '44px',
+                            height: embedded ? '34px' : '44px',
                             background: c.borderSubtle,
                             borderRadius: '3px',
                             display: 'flex',
@@ -1068,13 +1088,13 @@ export function MultisampleSampleTable({
                         onClick={() => openFileDialog(index)}
                         style={{
                           width: '100%',
-                          height: '44px',
+                          height: embedded ? '34px' : '44px',
                           background: 'none',
-                          border: `2px dashed ${c.borderMed}`,
+                          border: `1px dashed ${c.borderMed}`,
                           borderRadius: '3px',
                           padding: '0 1rem',
                           color: c.textSecondary,
-                          fontSize: '0.8rem',
+                          fontSize: embedded ? '0.72rem' : '0.8rem',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           display: 'flex',
@@ -1101,11 +1121,12 @@ export function MultisampleSampleTable({
                     gap: '0.25rem', 
                     justifyContent: 'center', 
                     alignItems: 'center',
-                    paddingRight: '16px'
+                    paddingRight: embedded ? '10px' : '16px'
                   }}>
                     {sample?.isLoaded ? (
                       <>
-                        <button
+                        <ActionButton
+                          label=""
                           onMouseDown={() => playSample(index).catch(error => {
                             console.error('Error playing sample:', error);
                           })}
@@ -1115,29 +1136,31 @@ export function MultisampleSampleTable({
                             console.error('Error playing sample:', error);
                           })}
                           onTouchEnd={stopPlayback}
-                          style={actionButtonStyle}
-                          title="play"
+                          ariaLabel="play"
+                          size="sm"
                         >
-                          <i className="fas fa-play" style={{ fontSize: '18px' }}></i>
-                        </button>
-                        <button
+                          <PlayIcon />
+                        </ActionButton>
+                        <ActionButton
+                          label=""
                           onClick={() => onClearSample(index)}
-                          style={actionButtonStyle}
-                          title="clear"
+                          ariaLabel="clear"
+                          size="sm"
                         >
-                          <i className="fas fa-times" style={{ fontSize: '18px' }}></i>
-                        </button>
+                          <ClearIcon />
+                        </ActionButton>
                       </>
                     ) : (
                       <>
-                        <button
+                        <ActionButton
+                          label=""
                           onClick={() => openFileDialog(index)}
-                          style={actionButtonStyle}
-                          title="browse"
+                          ariaLabel="browse"
+                          size="sm"
                         >
                           <i className="fas fa-upload" style={{ fontSize: '18px' }}></i>
-                        </button>
-                        <button
+                        </ActionButton>
+                        {!embedded ? <button
                           onClick={() => onRecordSample(index)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
@@ -1162,7 +1185,7 @@ export function MultisampleSampleTable({
                           }}
                         >
                           <i className="fas fa-microphone" style={{ fontSize: '18px', color: 'var(--color-accent-primary)' }} aria-hidden="true"></i>
-                        </button>
+                        </button> : null}
                       </>
                     )}
                   </div>

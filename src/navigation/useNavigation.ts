@@ -10,7 +10,9 @@ export function useNavigation() {
     goToProjects: (projectFilename?: string | null) =>
       navigate({ mode: 'projects', projectFilename }),
     goToPresets: (presetPath?: string | null, submode?: PresetSubmode) =>
-      navigate({ mode: 'presets', presetPath, presetSubmode: submode }),
+      navigate({ mode: 'presets', presetPath, presetSearchQuery: null, presetSubmode: submode }),
+    openPresetSearch: (query: string) =>
+      navigate({ mode: 'presets', presetPath: null, presetSearchQuery: query }),
     goToSamples: (sampleFilename?: string | null) =>
       navigate({ mode: 'samples', sampleFilename }),
     openPresetRef: (presetPath: string) =>

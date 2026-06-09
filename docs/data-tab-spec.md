@@ -2,7 +2,7 @@
 
 **Status:** Design locked for layout and interaction patterns; content details and empty states TBD  
 **Prototype:** [opxy-shell-prototype.html](./prototypes/opxy-shell-prototype.html) (data screen)  
-**Parent docs:** [design-direction.md](./design-direction.md) (global shell), [ui-ux-audit.md](./ui-ux-audit.md) (as-built app)  
+**Parent docs:** [design-direction.md](./design-direction.md) (global shell), [compact-ui-ux-principles.md](./compact-ui-ux-principles.md) (screen-space rules), [ui-ux-audit.md](./ui-ux-audit.md) (as-built app)  
 **Last updated:** 2026-06-06
 
 ---
@@ -77,7 +77,7 @@ Vertical **sync cockpit** — top/bottom, not left/right.
 ├─────────────────────────────────────────────┤
 │ ◀ ··· ▶ [list]     [commit][history][save as]│  ← sets toolbar (fixed)
 └─────────────────────────────────────────────┘
-│ data │ proj │ pre │ smp │                     ← bottom mode keys
+│ sets │ projects │ presets │ library │         ← bottom mode keys
 ```
 
 ### Equal content areas
@@ -108,10 +108,10 @@ Connection state must not cause layout jump in the panes below.
 
 Shows what we know about the device **without** requiring a full pull:
 
-- **8 GB** stacked storage bar (presets / samples / projects / other / free)
-- **Counts:** presets, samples, projects (mono, right column)
+- **Counts:** presets, samples, projects
+- **Trust facts:** connection/source, size availability, last pull
 
-**Content TBD:** Storage breakdown may be of limited value on device. OP-XY often reports **0 bytes** for file sizes over MTP, so segment sizes may be **set-only** (computed after pull). **Counts** are still viable on device and should remain the reliable metric.
+Storage breakdown is not the default device content. OP-XY often reports **0 bytes** for file sizes over MTP, so byte distribution would look precise while being untrustworthy.
 
 Without pulling, the device pane cannot show much more than summary stats — that is acceptable.
 
@@ -159,10 +159,10 @@ Horizontal carousel of sets. One slide visible at full content width; inactive s
 
 Each slide mirrors the device pane layout:
 
-- 8 GB stacked bar + legend
-- Counts column (presets, samples, projects)
+- Counts for presets, samples, projects
+- Set facts such as local/device marker, history/checkpoints, and storage availability
 
-**Content TBD:** Same storage caveats as device. Sets can compute sizes accurately from local files. Richer set summary (dirty edits, last sync, etc.) may replace or supplement the bar later.
+Local sets can compute file sizes after pull, but size should remain optional detail. The main job of the panel is to explain what set is selected and whether it is safe/meaningful to push or pull.
 
 ### History panel
 
@@ -201,7 +201,7 @@ Auto-select the set that best matches the device (last-pushed memory + content f
 
 ---
 
-## Visual & copy rules (data tab)
+## Visual & copy rules (sets tab)
 
 Inherited from [design-direction.md](./design-direction.md):
 
@@ -220,48 +220,64 @@ Rejected patterns:
 
 ---
 
-## Empty & first-run states (TBD)
+## Empty & first-run states
 
 When the user has **no sets yet**:
 
 | Option | When | UX sketch |
 |--------|------|-----------|
-| **Pull to create first set** | OP-XY **connected** | Empty sets pane + pull as primary path; copy like `pull to create your first set` |
-| **Create empty set** | Always (especially **offline**) | Action to spawn an empty local set — work without hardware, prepare content before a gig |
+| **Pull to create first set** | OP-XY **connected** | Empty sets pane + pull as primary path; copy: `pull to create first set` |
+| **Create empty set** | Always, especially **offline** | Secondary path for offline-first work; copy: `create empty set` |
 
 Rules:
 
 - Pull-to-create requires connection — not offered offline
 - Create-empty-set supports offline-first workflows
-- Exact layout and copy TBD; both paths should exist
+- Both actions live in the sets pane, not in a global onboarding screen.
+- The device pane still shows connection state; the sets pane owns set creation.
 
-When OP-XY is offline and no sets exist, device pane shows connect illustration; sets pane shows empty-set / create-empty affordance (TBD).
+When OP-XY is offline and no sets exist, device pane shows connect state and the sets pane offers `create empty set`. If the device connects later, `pull to create first set` appears as the preferred import path.
 
 ---
 
-## Storage & metrics (TBD)
+## Panel content model
+
+The OP-XY and selected-set panels are the two objects being reconciled by **pull** and **push**. Their layout is final, but their content should stay modular.
+
+Current content contract:
 
 | Metric | Device pane | Set pane |
 |--------|-------------|----------|
 | Preset / sample / project **counts** | Yes (MTP) | Yes (local index) |
-| Per-category **GB** on stacked bar | Unreliable (often 0 B from device) | Reliable after pull |
-| 8 GB total framing | Yes — iPhone-style stacked bar | Yes — same visual grammar |
+| Trust/provenance facts | Yes: connection, MTP size caveat, last pull | Yes: local/device marker, history, local-only status |
+| Per-category **GB** distribution | No by default; MTP often reports 0 B | Optional future detail when useful |
+| 8 GB total framing | Avoid as primary framing | Avoid as primary framing |
 
-Open question: hide or de-emphasize GB segments on device when sizes are unknown; show counts only until first pull populates local size data.
+Decision: counts and trust facts are the reliable primary metrics. Storage distribution is secondary and should not be the default body because OP-XY MTP sizes are unreliable and set usefulness is not defined by fitting inside 8 GB.
 
-Broader content review TBD — the bar + counts may be replaced with more actionable summaries (e.g. modified since last commit, push readiness).
+Content hierarchy:
+
+1. Connection and active set identity.
+2. Preset/sample/project counts.
+3. Push readiness and dirty state.
+4. Storage size only when trustworthy and useful.
+
+The set pane can show richer local storage information after pull because local file sizes are reliable.
 
 ---
 
-## Push preflight (TBD)
+## Push preflight
 
 Prototype includes a hidden **push** slab (review + confirm). Product behavior:
 
-- Not a scary modal by default
-- Summarize what will overwrite on device
-- Tie to dirty-state tracking across presets/samples
+- Not a scary modal by default.
+- Opens as a focused review sheet when there are dirty changes, rename operations, missing refs, conflicts, or overwrite risk.
+- Summarizes what will overwrite on device.
+- Ties to dirty-state tracking across presets/samples/projects.
+- Names the active set before the final push action.
+- Blocks push on unresolved missing refs or name/path conflicts.
 
-Detailed spec belongs in a future change-review section; data tab only hosts the entry point via **push**.
+Data mode hosts the entry point via **push**. The detailed review content follows [mvp-screen-slices.md](./mvp-screen-slices.md) Slice 6 and [product-decisions.md](./product-decisions.md) D-7.
 
 ---
 
@@ -295,8 +311,9 @@ The interactive prototype implements:
 - [x] `sets · {name}` header with on-device dot
 - [x] Commit / history / save as (mock data)
 - [x] Linear history list
-- [ ] First-run empty states
+- [x] First-run empty states specified
 - [ ] Real MTP counts / sizes
+- [x] Push preflight product behavior specified
 - [ ] Push preflight wired to dirty state
 - [ ] Git-backed commit/history
 
@@ -304,8 +321,8 @@ The interactive prototype implements:
 
 ## Open questions
 
-1. **Default landing** — data tab on first launch vs last mode?
-2. **Device storage bar** — show when sizes are all zero, or counts-only mode?
+1. **Default landing** — sets tab on first launch vs last mode?
+2. **Device storage bar visual treatment** — exact muted style when sizes are all zero.
 3. **History UX** — dots + list enough, or OP-XY-style timeline scrubber?
 4. **Set naming** — inline rename in header, or only via list / save as?
 5. **Delete set** — where does it live (list menu, long-press, command strip)?
@@ -324,4 +341,4 @@ The interactive prototype implements:
 
 ---
 
-*This document is the source of truth for data tab layout and behavior. Update it when the prototype or product diverges.*
+*This document is the source of truth for sets tab layout and behavior. Update it when the prototype or product diverges.*

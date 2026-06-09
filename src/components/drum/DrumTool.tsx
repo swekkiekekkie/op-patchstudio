@@ -18,7 +18,18 @@ import { saveDrumSettingsAsDefault } from '../../utils/defaultSettings';
 import { parseOP1DrumPreset, isOP1DrumPreset } from '../../utils/op1DrumPresetParser';
 import { AUDIO_CONSTANTS } from '../../utils/constants';
 
-export function DrumTool() {
+declare global {
+  interface Window {
+    op1PresetInput?: HTMLInputElement;
+    unassignedSampleInput?: HTMLInputElement;
+  }
+}
+
+interface DrumToolProps {
+  embedded?: boolean;
+}
+
+export function DrumTool({ embedded = false }: DrumToolProps) {
   const { state, dispatch } = useAppContext();
   const { handleDrumSampleUpload, clearDrumSample } = useFileUpload();
   const { generateDrumPatchFile } = usePatchGeneration();
@@ -398,18 +409,22 @@ export function DrumTool() {
   );
 
   return (
-    <div style={{ 
-      fontFamily: '"Montserrat", "Arial", sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%'
-    }}>
+    <div
+      className={embedded ? 'patch-editor patch-editor--embedded' : undefined}
+      style={{
+        fontFamily: embedded ? 'inherit' : '"Montserrat", "Arial", sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+      }}
+    >
 
-      <CacheEditorContextBar />
+      {!embedded ? <CacheEditorContextBar /> : null}
 
       {/* Always Visible Drum Keyboard Section with pinning */}
-      <div style={{
-        padding: isMobile ? '1rem 0.5rem' : '2rem 2rem',
+      <div className={embedded ? 'embedded-editor-keyboard' : undefined} style={{
+        padding: embedded ? 0 : (isMobile ? '1rem 0.5rem' : '2rem 2rem'),
       }}>
         <DrumKeyboardContainer
           onFileUpload={handleFileUpload}
@@ -419,22 +434,24 @@ export function DrumTool() {
       </div>
 
       {/* Tabbed Content Area */}
-      <div style={{ 
+      <div className={embedded ? 'embedded-editor-samples' : undefined} style={{
         flex: 1,
-        padding: isMobile ? '0 0.5rem' : '0 2rem',
-        marginBottom: '1rem'
+        minHeight: 0,
+        padding: embedded ? 0 : (isMobile ? '0 0.5rem' : '0 2rem'),
+        marginBottom: embedded ? 0 : '1rem'
       }}>
         {/* Sample Management Section */}
-        <div style={{
+        <div className={embedded ? 'embedded-sample-panel' : undefined} style={{
           background: 'var(--color-bg-primary)',
-          borderRadius: '15px',
-          boxShadow: '0 2px 8px var(--color-shadow-primary)',
+          borderRadius: embedded ? 0 : '15px',
+          boxShadow: embedded ? 'none' : '0 2px 8px var(--color-shadow-primary)',
           border: '1px solid var(--color-border-subtle)',
           overflow: 'hidden',
-          marginBottom: '1rem',
+          marginBottom: embedded ? 0 : '1rem',
+          height: embedded ? '100%' : undefined,
         }}>
-          {/* Header */}
-          <div style={{
+          {!embedded ? (
+            <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -452,20 +469,23 @@ export function DrumTool() {
                 sample management
               </h3>
             </div>
-          </div>
+            </div>
+          ) : null}
 
           {/* Content */}
-          <div style={{ 
-            padding: isMobile ? '1rem' : '0',
+          <div className={embedded ? 'embedded-sample-panel-body' : undefined} style={{
+            padding: embedded ? 0 : (isMobile ? '1rem' : '0'),
           }}>
             <DrumSampleTable
               onFileUpload={handleFileUpload}
               onClearSample={handleClearSample}
               onRecordSample={handleOpenRecording}
               isOrganizeMode={isOrganizeMode}
+              embedded={embedded}
             />
             {/* Action Buttons Below Table - RESTORED */}
-            <div style={{
+            {!embedded ? (
+              <div style={{
               display: 'flex',
               gap: '1rem',
               justifyContent: 'flex-end',
@@ -489,7 +509,7 @@ export function DrumTool() {
                 }}
                 ref={(input) => {
                   if (input) {
-                    (window as any).op1PresetInput = input;
+                    window.op1PresetInput = input;
                   }
                 }}
               />
@@ -509,7 +529,7 @@ export function DrumTool() {
                 }}
                 ref={(input) => {
                   if (input) {
-                    (window as any).unassignedSampleInput = input;
+                    window.unassignedSampleInput = input;
                   }
                 }}
               />
@@ -555,7 +575,7 @@ export function DrumTool() {
                 clear all
               </button>
               <button
-                onClick={() => (window as any).op1PresetInput?.click()}
+                onClick={() => window.op1PresetInput?.click()}
                 style={{
                   minHeight: '44px',
                   minWidth: '44px',
@@ -623,7 +643,7 @@ export function DrumTool() {
                 bulk edit
               </button>
               <button
-                onClick={() => (window as any).unassignedSampleInput?.click()}
+                onClick={() => window.unassignedSampleInput?.click()}
                 style={{
                   minHeight: '44px',
                   minWidth: '44px',
@@ -653,11 +673,14 @@ export function DrumTool() {
                 <i className="fas fa-folder-open" style={{ fontSize: '1rem' }}></i>
                 browse
               </button>
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
+      {embedded ? null : (
+        <>
       {/* Preset Settings Panel - Always Visible */}
       <div style={{
         padding: isMobile ? '0 0.5rem' : '0 2rem',
@@ -719,6 +742,8 @@ export function DrumTool() {
           onAudioFormatChange={(format) => dispatch({ type: 'SET_DRUM_AUDIO_FORMAT', payload: format })}
         />
       </div>
+        </>
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal

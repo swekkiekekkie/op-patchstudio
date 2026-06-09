@@ -19,6 +19,7 @@ export async function loadPresetIntoEditor(
   dispatch: Dispatch<AppAction>,
   mapping: 'C3' | 'C4',
   multisampleCount: number,
+  options?: { embed?: boolean },
 ): Promise<'drum' | 'multisample'> {
   if (!window.opxy) throw new Error('App bridge unavailable');
 
@@ -56,7 +57,9 @@ export async function loadPresetIntoEditor(
       });
     }
 
-    dispatch({ type: 'SET_TAB', payload: 'drum' });
+    if (!options?.embed) {
+      dispatch({ type: 'SET_TAB', payload: 'drum' });
+    }
     return 'drum';
   }
 
@@ -96,7 +99,9 @@ export async function loadPresetIntoEditor(
       });
     }
 
-    dispatch({ type: 'SET_TAB', payload: 'multisample' });
+    if (!options?.embed) {
+      dispatch({ type: 'SET_TAB', payload: 'multisample' });
+    }
     return 'multisample';
   }
 

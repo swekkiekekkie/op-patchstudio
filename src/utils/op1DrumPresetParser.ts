@@ -30,6 +30,15 @@ export interface OP1DrumPreset {
   bitDepth: number;
 }
 
+function stripControlCharacters(value: string): string {
+  return Array.from(value)
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return code > 31 && code !== 127;
+    })
+    .join('');
+}
+
 // Parse OP-1 drum preset AIFF file
 export async function parseOP1DrumPreset(arrayBuffer: ArrayBuffer, filename: string): Promise<OP1DrumPreset> {
   try {
@@ -129,9 +138,8 @@ export async function parseOP1DrumPreset(arrayBuffer: ArrayBuffer, filename: str
             if (jsonStart !== -1) {
               let jsonStr = applText.substring(jsonStart);
               
-              // Clean the JSON string by removing null characters and other problematic characters
-              jsonStr = jsonStr.replace(/\0/g, ''); // Remove null characters
-              jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, ''); // Remove other control characters
+              // Clean the JSON string by removing control characters.
+              jsonStr = stripControlCharacters(jsonStr);
               jsonStr = jsonStr.trim(); // Remove leading/trailing whitespace
               
               // Try to find the end of the JSON object
@@ -492,9 +500,8 @@ export function isOP1DrumPreset(arrayBuffer: ArrayBuffer): boolean {
             if (jsonStart !== -1) {
               let jsonStr = applText.substring(jsonStart);
               
-              // Clean the JSON string by removing null characters and other problematic characters
-              jsonStr = jsonStr.replace(/\0/g, ''); // Remove null characters
-              jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, ''); // Remove other control characters
+              // Clean the JSON string by removing control characters.
+              jsonStr = stripControlCharacters(jsonStr);
               jsonStr = jsonStr.trim(); // Remove leading/trailing whitespace
               
               // Try to find the end of the JSON object
@@ -537,7 +544,7 @@ export function isOP1DrumPreset(arrayBuffer: ArrayBuffer): boolean {
               }
             }
           }
-        } catch (error) {
+        } catch {
           // Ignore parsing errors
         }
       }

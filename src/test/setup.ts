@@ -1,5 +1,10 @@
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach, vi } from 'vitest'
+
+afterEach(() => {
+  cleanup()
+})
 
 // Mock AudioBuffer class
 class MockAudioBuffer {
@@ -73,24 +78,26 @@ global.AudioContext = vi.fn().mockImplementation(() => ({
 }))
 
 // Make AudioBuffer available globally
-global.AudioBuffer = MockAudioBuffer as any;
+global.AudioBuffer = MockAudioBuffer as unknown as typeof AudioBuffer;
 
 // Mock MediaRecorder
-const MediaRecorderMock = function (this: any) {
-  this.start = vi.fn()
-  this.stop = vi.fn()
-  this.pause = vi.fn()
-  this.resume = vi.fn()
-  this.state = 'inactive'
-  this.ondataavailable = null
-  this.onstop = null
-  this.onerror = null
+class MediaRecorderMock {
+  static isTypeSupported = vi.fn(() => true)
+  start = vi.fn()
+  stop = vi.fn()
+  pause = vi.fn()
+  resume = vi.fn()
+  state = 'inactive'
+  ondataavailable = null
+  onstop = null
+  onerror = null
 }
-MediaRecorderMock.isTypeSupported = vi.fn(() => true)
 
-global.MediaRecorder = MediaRecorderMock as any
+global.MediaRecorder = MediaRecorderMock as unknown as typeof MediaRecorder
 
 // Mock WebMIDI API
+type MockMidiPort = ReturnType<typeof createMockMidiPort>
+
 const createMockMidiPort = (id: string, name: string, type: 'input' | 'output', manufacturer: string = 'Test Manufacturer') => ({
   id,
   name,
@@ -98,17 +105,17 @@ const createMockMidiPort = (id: string, name: string, type: 'input' | 'output', 
   type,
   connection: 'open' as const,
   state: 'connected' as const,
-  onmidimessage: null as any,
-  onstatechange: null as any,
+  onmidimessage: null,
+  onstatechange: null,
   send: vi.fn(),
   open: vi.fn(() => Promise.resolve()),
   close: vi.fn(() => Promise.resolve())
 })
 
-const createMockMidiAccess = (inputs: any[] = [], outputs: any[] = []) => ({
+const createMockMidiAccess = (inputs: MockMidiPort[] = [], outputs: MockMidiPort[] = []) => ({
   inputs: new Map(inputs.map(input => [input.id, input])),
   outputs: new Map(outputs.map(output => [output.id, output])),
-  onstatechange: null as any,
+  onstatechange: null,
   sysexEnabled: false
 })
 
@@ -143,8 +150,8 @@ const localStorageMock = {
   length: 0,
   key: vi.fn()
 }
-global.localStorage = localStorageMock as any
-global.sessionStorage = localStorageMock as any
+global.localStorage = localStorageMock as unknown as Storage
+global.sessionStorage = localStorageMock as unknown as Storage
 
 // Patch AudioParam and GainNode to support setValueCurveAtTime for ADSR tests
 class MockAudioParam {
@@ -153,7 +160,7 @@ class MockAudioParam {
   setValueAtTime = vi.fn();
   linearRampToValueAtTime = vi.fn();
 }
-global.AudioParam = MockAudioParam as any;
+global.AudioParam = MockAudioParam as unknown as typeof AudioParam;
 // Patch createGain to return a gain node with a writable gain property
 const origCreateGain = global.AudioContext.prototype?.createGain;
 if (origCreateGain) {
@@ -194,11 +201,11 @@ try {
         rotate: vi.fn(),
         // Add any other needed 2d context methods here
       };
-      return ctx as any;
+      return ctx as unknown as CanvasRenderingContext2D;
     }
     return origGetContext ? origGetContext.apply(this, args) : null;
   };
-} catch (e) {
+} catch {
   // If we can't mock, ignore and let tests skip or fail gracefully
 }
 

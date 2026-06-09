@@ -27,6 +27,7 @@ export function useProjectLibrary(cacheProjects: ProjectListEntry[]) {
             name: project.name,
             relativePath: project.relativePath,
             sceneCount: sceneCountForProject(project.name, project),
+            inspection: project.inspection,
           }))
         : MOCK_PROJECT_LIST.map(({ id, name, relativePath, sceneCount }) => ({
             id,
@@ -45,6 +46,10 @@ export function useProjectLibrary(cacheProjects: ProjectListEntry[]) {
   }, [cacheProjects, search]);
 
   const selectedId = state.projectFilename;
+  const selectedProject = useMemo(
+    () => items.find((item) => item.name === selectedId) ?? null,
+    [items, selectedId],
+  );
 
   const selectProject = useCallback(
     (name: string) => {
@@ -58,6 +63,7 @@ export function useProjectLibrary(cacheProjects: ProjectListEntry[]) {
     search,
     setSearch,
     selectedId,
+    selectedProject,
     selectProject,
     usingMockList: cacheProjects.length === 0,
   };

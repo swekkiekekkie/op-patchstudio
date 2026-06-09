@@ -66,11 +66,27 @@ export function useShellModes({ cache, sync, setLibrary, projectLibrary }: Shell
 
     standaloneSamples,
 
+    sourceFolders,
+
+    sourceSamples,
+
+    sourcePresets,
+
     dirtyPresets,
 
     busy,
 
     refresh,
+
+    addSourceFolder,
+
+    removeSourceFolder,
+
+    scanSourceFolders,
+
+    copySourceSamplesToSet,
+
+    copySourcePresetsToSet,
 
   } = cache;
 
@@ -86,7 +102,7 @@ export function useShellModes({ cache, sync, setLibrary, projectLibrary }: Shell
 
       data: <DataMode sync={sync} library={setLibrary} />,
 
-      projects: <ProjectsMode library={projectLibrary} />,
+      projects: <ProjectsMode library={projectLibrary} presets={presets} />,
 
       presets: cacheReady ? (
 
@@ -114,7 +130,19 @@ export function useShellModes({ cache, sync, setLibrary, projectLibrary }: Shell
 
       samples: (
 
-        <SamplesMode samples={standaloneSamples} busy={busy} onRefresh={refresh} />
+        <SamplesMode
+          samples={standaloneSamples}
+          sourceFolders={sourceFolders}
+          sourceSamples={sourceSamples}
+          sourcePresets={sourcePresets}
+          busy={busy}
+          onRefresh={refresh}
+          onAddSourceFolder={addSourceFolder}
+          onRemoveSourceFolder={removeSourceFolder}
+          onScanSourceFolders={scanSourceFolders}
+          onCopySourceSamplesToSet={copySourceSamplesToSet}
+          onCopySourcePresetsToSet={copySourcePresetsToSet}
+        />
 
       ),
 
@@ -140,11 +168,29 @@ export function useShellModes({ cache, sync, setLibrary, projectLibrary }: Shell
 
       standaloneSamples,
 
+      sourceFolders,
+
+      sourceSamples,
+
+      sourcePresets,
+
+      addSourceFolder,
+
+      removeSourceFolder,
+
+      scanSourceFolders,
+
+      copySourceSamplesToSet,
+
+      copySourcePresetsToSet,
+
       shellState.projectFilename,
 
       shellState.sampleFilename,
 
       shellState.presetPath,
+
+      shellState.presetSearchQuery,
 
     ],
 

@@ -148,7 +148,7 @@ export function DrumBulkEditModal({ isOpen, onClose }: DrumBulkEditModalProps) {
                 outline: 'none'
               }}
               value={settings.playmode}
-              onChange={(e) => setSettings({...settings, playmode: e.target.value as any})}
+              onChange={(e) => setSettings({...settings, playmode: e.target.value as BulkSettings['playmode']})}
             >
               <option value="oneshot">oneshot - play whole sample</option>
               <option value="group">mute group - choke when another sample plays</option>

@@ -7,6 +7,7 @@ import '../ui/ui-kit.scss';
 import '../theme/shell.scss';
 import '../theme/mode-screens.scss';
 import '../theme/data-projects.scss';
+import '../theme/preset-editor.scss';
 
 interface AppShellProps {
   connected: boolean;

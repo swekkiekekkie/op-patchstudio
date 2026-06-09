@@ -77,16 +77,14 @@ vi.mock('../../components/common/GeneratePresetSection', () => ({
     filenameSeparator,
     onFilenameSeparatorChange,
     onResetAll,
-    onSaveToLibrary,
-    onDownloadPreset,
+    onExportPreset,
     onSaveSettingsAsDefault,
   }: any) => (
     <div data-testid="generate-preset-section">
       <span data-testid="has-changes-from-defaults">{hasChangesFromDefaults.toString()}</span>
       <button onClick={onResetAll}>reset all</button>
       <button onClick={onSaveSettingsAsDefault}>save as default</button>
-      <button onClick={onSaveToLibrary}>save to library</button>
-      <button onClick={onDownloadPreset}>download preset</button>
+      <button onClick={onExportPreset}>download preset</button>
       <input
         data-testid="rename-files-toggle"
         type="checkbox"
@@ -409,9 +407,9 @@ describe('DrumTool', () => {
     });
   });
 
-  it('should handle save to library button click', async () => {
+  it('should handle save as default button click', async () => {
     render(<DrumTool />);
-    const saveButton = screen.getByText('save to library');
+    const saveButton = screen.getByText('save as default');
     fireEvent.click(saveButton);
     // Wait for async dispatch
     await waitFor(() => {
@@ -420,7 +418,7 @@ describe('DrumTool', () => {
           type: 'ADD_NOTIFICATION',
           payload: expect.objectContaining({
             type: 'success',
-            title: 'preset saved',
+            title: 'settings saved',
           }),
         })
       );

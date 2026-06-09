@@ -175,6 +175,82 @@ export interface CacheSampleEntry {
   isUnnamed: boolean;
 }
 
+export interface SourceFolderEntry {
+  id: string;
+  path: string;
+  label: string;
+  sampleCount: number;
+  presetCount: number;
+  lastScannedAt: number | null;
+  flags: Array<'missing_folder' | 'scan_failed'>;
+}
+
+export interface SourceSampleEntry {
+  id: string;
+  folderId: string;
+  folderLabel: string;
+  absolutePath: string;
+  relativePath: string;
+  filename: string;
+  extension: string;
+  sizeBytes: number;
+  mtimeMs: number;
+  alreadyInSet: boolean;
+}
+
+export interface SourcePresetEntry {
+  id: string;
+  folderId: string;
+  folderLabel: string;
+  absolutePath: string;
+  relativePath: string;
+  folderName: string;
+  name: string;
+  type: string;
+  sampleRefs: string[];
+  availableSampleRefs: string[];
+  missingSampleRefs: string[];
+  mtimeMs: number;
+  alreadyInSet: boolean;
+  flags: Array<'missing_patch' | 'malformed_patch' | 'missing_refs' | 'already_in_set'>;
+}
+
+export interface SourceLibraryScanResult {
+  folders: SourceFolderEntry[];
+  samples: SourceSampleEntry[];
+  presets: SourcePresetEntry[];
+  scannedAt: number;
+}
+
+export interface SourceSampleCopyResult {
+  ok: boolean;
+  copied: Array<{ sourcePath: string; targetRelativePath: string }>;
+  replaced: Array<{ sourcePath: string; targetRelativePath: string }>;
+  skipped: Array<{ sourcePath: string; reason: string }>;
+  conflicts: Array<{ sourcePath: string; targetRelativePath: string }>;
+  error?: string;
+}
+
+export interface SourceSampleCopyOptions {
+  conflict: 'skip' | 'replace';
+}
+
+export interface SourcePresetCopyResult {
+  ok: boolean;
+  copied: Array<{ sourcePath: string; targetRelativePath: string }>;
+  replaced: Array<{ sourcePath: string; targetRelativePath: string }>;
+  skipped: Array<{ sourcePath: string; reason: string }>;
+  conflicts: Array<{ sourcePath: string; targetRelativePath: string }>;
+  sampleResult: SourceSampleCopyResult;
+  missingSampleRefs: Array<{ sourcePath: string; ref: string }>;
+  error?: string;
+}
+
+export interface SourcePresetCopyOptions {
+  conflict: 'skip' | 'replace';
+  includeSamples?: boolean;
+}
+
 export interface PresetRegionEntry {
   index: number;
   sample: string;
@@ -257,6 +333,7 @@ export interface ProjectListEntry {
   relativePath: string;
   name: string;
   referencedSamples: string[];
+  inspection?: import('./sync').ProjectInspection;
 }
 
 export interface ProjectIndexSummary {
@@ -278,6 +355,12 @@ export interface OpxyApi {
     cacheRoot(): Promise<string>;
     listPresets(): Promise<CachePresetEntry[]>;
     listStandaloneSamples(): Promise<CacheSampleEntry[]>;
+    listSourceFolders(): Promise<SourceFolderEntry[]>;
+    addSourceFolder(): Promise<{ ok: boolean; folder?: SourceFolderEntry; error?: string; cancelled?: boolean }>;
+    removeSourceFolder(folderId: string): Promise<{ ok: boolean; folders?: SourceFolderEntry[]; error?: string }>;
+    scanSourceFolders(): Promise<SourceLibraryScanResult>;
+    copySourceSamplesToSet(sourcePaths: string[], options?: SourceSampleCopyOptions): Promise<SourceSampleCopyResult>;
+    copySourcePresetsToSet(sourcePaths: string[], options?: SourcePresetCopyOptions): Promise<SourcePresetCopyResult>;
     listCategories(): Promise<string[]>;
     getPresetDetail(relativePath: string): Promise<PresetDetail>;
     renameSampleInPreset(

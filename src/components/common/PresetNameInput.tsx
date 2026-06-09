@@ -9,6 +9,8 @@ interface PresetNameInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  invalid?: boolean;
+  invalidText?: string;
 }
 
 export function PresetNameInput({
@@ -18,6 +20,8 @@ export function PresetNameInput({
   onChange,
   placeholder = 'enter preset name',
   disabled = false,
+  invalid = false,
+  invalidText = '',
 }: PresetNameInputProps) {
   const [localValue, setLocalValue] = useState(value);
   const [validationError, setValidationError] = useState('');
@@ -52,8 +56,8 @@ export function PresetNameInput({
       }}
       placeholder={placeholder}
       disabled={disabled}
-      invalid={!!validationError}
-      invalidText={validationError}
+      invalid={invalid || !!validationError}
+      invalidText={validationError || invalidText}
     />
   );
 }

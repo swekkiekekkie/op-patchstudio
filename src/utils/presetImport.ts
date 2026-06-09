@@ -1,33 +1,27 @@
 // Import utilities for preset validation and conversion
 
+import type { JsonObject } from './valueConversions';
+
 export interface DrumPresetJson {
   type: 'drum';
-  engine: {
+  engine: JsonObject & {
     bendrange?: number;
     'velocity.sensitivity'?: number;
     volume?: number;
     width?: number;
     playmode?: 'poly' | 'mono' | 'legato';
     transpose?: number;
-    // Other engine properties that might exist
-    [key: string]: any;
   };
-  // Other patch properties
-  [key: string]: any;
 }
 
 export interface MultisamplePresetJson {
   type: 'multisampler';
-  engine: {
+  engine: JsonObject & {
     bendrange?: number;
     'velocity.sensitivity'?: number;
     volume?: number;
     width?: number;
-    // Other engine properties that might exist
-    [key: string]: any;
   };
-  // Other patch properties
-  [key: string]: any;
 }
 
 export type PresetJson = DrumPresetJson | MultisamplePresetJson;
@@ -42,7 +36,11 @@ function isMultisamplePresetType(type: string): boolean {
   return type === 'multisampler' || type === 'sampler';
 }
 
-export function validatePresetJson(jsonData: any, expectedType: 'drum' | 'multisampler'): ImportResult {
+function isJsonObject(value: unknown): value is JsonObject {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function validatePresetJson(jsonData: unknown, expectedType: 'drum' | 'multisampler'): ImportResult {
   try {
     // Check if it's a valid object
     if (!jsonData || typeof jsonData !== 'object') {
@@ -52,30 +50,33 @@ export function validatePresetJson(jsonData: any, expectedType: 'drum' | 'multis
       };
     }
 
+    const presetCandidate = jsonData as JsonObject;
+
     // Check type field
-    if (!jsonData.type) {
+    if (presetCandidate.type === undefined || presetCandidate.type === null || presetCandidate.type === '') {
       return {
         success: false,
         error: 'Missing "type" field in JSON'
       };
     }
 
+    const presetType = String(presetCandidate.type);
     const typeMatches =
       expectedType === 'drum'
-        ? jsonData.type === 'drum'
-        : isMultisamplePresetType(jsonData.type);
+        ? presetType === 'drum'
+        : isMultisamplePresetType(presetType);
 
     if (!typeMatches) {
       let message = '';
 
-      if (expectedType === 'drum' && isMultisamplePresetType(jsonData.type)) {
+      if (expectedType === 'drum' && isMultisamplePresetType(presetType)) {
         message = 'This is a multisample preset, but you\'re trying to import it into the drum tool. Please switch to the multisample tab to import this preset.';
-      } else if (expectedType === 'multisampler' && jsonData.type === 'drum') {
+      } else if (expectedType === 'multisampler' && presetType === 'drum') {
         message = 'This is a drum preset, but you\'re trying to import it into the multisample tool. Please switch to the drum tab to import this preset.';
       } else {
-        const actualType = jsonData.type === 'drum' ? 'drum' :
-                          isMultisamplePresetType(jsonData.type) ? 'multisampler' :
-                          jsonData.type;
+        const actualType = presetType === 'drum' ? 'drum' :
+                          isMultisamplePresetType(presetType) ? 'multisampler' :
+                          presetType;
         const expectedTypeName = expectedType === 'drum' ? 'drum' : 'multisampler';
         message = `This preset file has type "${actualType}" but we expected a "${expectedTypeName}" preset. Please make sure you're using the correct preset file.`;
       }
@@ -86,7 +87,7 @@ export function validatePresetJson(jsonData: any, expectedType: 'drum' | 'multis
       };
     }
 
-    if (!jsonData.engine || typeof jsonData.engine !== 'object') {
+    if (!isJsonObject(presetCandidate.engine)) {
       return {
         success: false,
         error: 'Missing or invalid "engine" field'
@@ -123,7 +124,7 @@ export async function importPresetFromFile(file: File, expectedType: 'drum' | 'm
     const text = await file.text();
 
     // Parse JSON
-    let jsonData: any;
+    let jsonData: unknown;
     try {
       jsonData = JSON.parse(text);
     } catch (parseError) {

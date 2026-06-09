@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { InlineLoading } from '@carbon/react';
 import { SmallWaveform } from '../common/SmallWaveform';
-import { IconButton } from '../common/IconButton';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
+import { ActionButton, PlayIcon, StopIcon } from '../../ui';
 
 interface CacheAudioPreviewProps {
   relativePath: string;
@@ -26,9 +26,12 @@ export function CacheAudioPreview({ relativePath, enabled = true, height = 44 }:
       try {
         const bytes = await window.opxy!.device.readBytes(relativePath);
         const ctx = new AudioContext();
-        const decoded = await ctx.decodeAudioData(bytes.slice(0));
-        await ctx.close();
-        if (!cancelled) setBuffer(decoded);
+        try {
+          const decoded = await ctx.decodeAudioData(bytes.slice(0));
+          if (!cancelled) setBuffer(decoded);
+        } finally {
+          await ctx.close();
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load audio');
       } finally {
@@ -56,19 +59,27 @@ export function CacheAudioPreview({ relativePath, enabled = true, height = 44 }:
   }, [buffer, play, stop, playing]);
 
   if (!enabled) return null;
-  if (loading) return <InlineLoading description="Loading audio…" />;
-  if (error) return <span style={{ fontSize: '0.8rem', color: 'var(--color-text-error)' }}>{error}</span>;
+  if (loading) return <InlineLoading description="loading audio" />;
+  if (error) {
+    return (
+      <div className="cache-audio-preview cache-audio-preview-error" title={error}>
+        <span className="mono">preview unavailable</span>
+      </div>
+    );
+  }
   if (!buffer) return null;
 
   return (
-    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-      <IconButton
-        icon={playing ? 'fas fa-stop' : 'fas fa-play'}
-        title={playing ? 'stop' : 'play sample'}
+    <div className="cache-audio-preview">
+      <ActionButton
+        label={playing ? 'stop' : 'play'}
+        ariaLabel={playing ? 'stop sample' : 'play sample'}
+        size="sm"
         onClick={handlePlay}
-        color="var(--color-interactive-focus)"
-      />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      >
+        {playing ? <StopIcon /> : <PlayIcon />}
+      </ActionButton>
+      <div className="cache-audio-waveform">
         <SmallWaveform audioBuffer={buffer} height={height} />
       </div>
     </div>

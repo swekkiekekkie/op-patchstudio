@@ -38,6 +38,11 @@ export function AppShellProvider({ children }: { children: ReactNode }) {
         opts.mode === 'presets',
         prev.presetPath,
       );
+      next.presetSearchQuery = mergeModeSelection(
+        opts.presetSearchQuery,
+        opts.mode === 'presets',
+        prev.presetSearchQuery,
+      );
       next.projectFilename = mergeModeSelection(
         opts.projectFilename,
         opts.mode === 'projects',

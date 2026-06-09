@@ -31,7 +31,12 @@
 /* Square scrollbars — mode-aware via currentColor, zero radius */
 @mixin opxy-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, currentColor 24%, transparent) transparent;
+  scrollbar-color: transparent transparent;
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in srgb, currentColor 24%, transparent) transparent;
+  }
 
   &::-webkit-scrollbar {
     width: var(--scrollbar-size, 6px);
@@ -43,16 +48,31 @@
   }
 
   &::-webkit-scrollbar-track:vertical {
-    border-left: 1px solid var(--separator, color-mix(in srgb, currentColor 10%, transparent));
+    border-left: 1px solid transparent;
   }
 
   &::-webkit-scrollbar-track:horizontal {
-    border-top: 1px solid var(--separator, color-mix(in srgb, currentColor 10%, transparent));
+    border-top: 1px solid transparent;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, currentColor 24%, transparent);
+    background: transparent;
     border-radius: 0;
+  }
+
+  &:hover::-webkit-scrollbar-track:vertical,
+  &:focus-within::-webkit-scrollbar-track:vertical {
+    border-left-color: var(--separator, color-mix(in srgb, currentColor 10%, transparent));
+  }
+
+  &:hover::-webkit-scrollbar-track:horizontal,
+  &:focus-within::-webkit-scrollbar-track:horizontal {
+    border-top-color: var(--separator, color-mix(in srgb, currentColor 10%, transparent));
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, currentColor 24%, transparent);
 
     &:hover {
       background: color-mix(in srgb, currentColor 38%, transparent);
@@ -218,6 +238,11 @@
 
   &--split {
     grid-template-columns: 2fr 3fr;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  &--detail-expanded {
+    grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr);
   }
 
