@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { InlineLoading } from '@carbon/react';
 import { SmallWaveform } from '../common/SmallWaveform';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
+import { audioContextManager } from '../../utils/audioContext';
 import { ActionButton, PlayIcon, StopIcon } from '../../ui';
 
 interface CacheAudioPreviewProps {
@@ -25,13 +26,11 @@ export function CacheAudioPreview({ relativePath, enabled = true, height = 44 }:
     (async () => {
       try {
         const bytes = await window.opxy!.device.readBytes(relativePath);
-        const ctx = new AudioContext();
-        try {
-          const decoded = await ctx.decodeAudioData(bytes.slice(0));
-          if (!cancelled) setBuffer(decoded);
-        } finally {
-          await ctx.close();
-        }
+        // Decode on the shared context: Chromium caps live AudioContexts, so
+        // a per-sample context breaks preview after browsing enough files.
+        const ctx = await audioContextManager.getAudioContext();
+        const decoded = await ctx.decodeAudioData(bytes.slice(0));
+        if (!cancelled) setBuffer(decoded);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load audio');
       } finally {

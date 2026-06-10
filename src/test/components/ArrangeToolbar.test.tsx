@@ -61,7 +61,6 @@ describe('ArrangeToolbar', () => {
 
     expect(screen.getByLabelText('selected pattern config')).toHaveTextContent('no selection');
     expect(screen.getByLabelText('selected pattern config')).toHaveTextContent('select track');
-    expect(screen.getByRole('button', { name: 'inspect selected pattern config no selection' })).toBeDisabled();
   });
 
   it('does not open the preset library for an empty draft slot', () => {

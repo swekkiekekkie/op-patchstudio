@@ -8,6 +8,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 function Write-Json($obj) {
   $json = $obj | ConvertTo-Json -Compress
@@ -56,7 +57,7 @@ try {
 
   $device = Find-OpxyDevice $computer.Items()
   if (-not $device) {
-    Write-Json @{ connected = $false; error = 'OP-XY not found under This PC — check USB and MTP mode' }
+    Write-Json @{ connected = $false; error = 'OP-XY not found - check USB and MTP mode' }
     exit 0
   }
 

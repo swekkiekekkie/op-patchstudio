@@ -948,7 +948,7 @@ export function VirtualMidiKeyboard({
           ref={keyboardScrollRef}
           className="hide-scrollbar"
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--color-bg-primary)',
             border: 'none',
             borderRadius: '0',
             padding: '1rem',

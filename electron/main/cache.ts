@@ -81,13 +81,18 @@ export function listPresets(cacheRoot: string): CachePresetEntry[] {
   return entries.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 }
 
+/** macOS AppleDouble resource forks (._*) and other dotfiles are metadata, not audio. */
+export function isJunkFilename(name: string): boolean {
+  return name.startsWith('.');
+}
+
 export function listStandaloneSamples(cacheRoot: string): CacheSampleEntry[] {
   const samplesRoot = path.join(cacheRoot, 'samples', 'user');
   if (!fs.existsSync(samplesRoot)) return [];
 
   return fs
     .readdirSync(samplesRoot)
-    .filter((f) => /\.(wav|aif|aiff)$/i.test(f))
+    .filter((f) => !isJunkFilename(f) && /\.(wav|aif|aiff)$/i.test(f))
     .map((filename) => {
       const parsed = parseDeviceSampleFilename(filename);
       return {

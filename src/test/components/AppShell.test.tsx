@@ -25,13 +25,13 @@ describe('AppShell', () => {
       />,
     );
 
-    expect(screen.getByRole('tab', { name: 'data' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'proj' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'pre' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'smp' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'sets' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'projects' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'presets' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'library' })).toBeInTheDocument();
   });
 
-  it('clicking pre calls onModeChange with presets', () => {
+  it('clicking presets tab calls onModeChange with presets', () => {
     const onModeChange = vi.fn();
     render(
       <AppShell
@@ -43,7 +43,7 @@ describe('AppShell', () => {
     );
 
     const tablist = screen.getByRole('tablist');
-    fireEvent.click(within(tablist).getByRole('tab', { name: /^pre$/ }));
+    fireEvent.click(within(tablist).getByRole('tab', { name: /^presets$/ }));
     expect(onModeChange).toHaveBeenCalledWith('presets');
   });
 

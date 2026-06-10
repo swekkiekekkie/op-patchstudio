@@ -68,20 +68,44 @@ export function buildSetSampleHierarchy(samples: CacheSampleEntry[]): SetSampleH
       }
 
       const folderId = path || '.';
-      const groups = [...groupsByBase.entries()]
-        .map(([base, groupSamples]) => {
-          const sortedGroupSamples = [...groupSamples].sort(sortSamples);
-          return {
-            id: `${folderId}:${base}`,
-            label: base,
-            folderId,
-            samples: sortedGroupSamples,
-            sampleCount: sortedGroupSamples.length,
-            unnamedCount: sortedGroupSamples.filter((sample) => sample.isUnnamed).length,
-            noteSummary: noteSummary(sortedGroupSamples),
-          };
-        })
-        .sort((a, b) => a.label.localeCompare(b.label));
+      // Real variant groups need 2+ files sharing a parsed base-note-idx base;
+      // everything else (unparsed names, singletons) goes into one loose group
+      // instead of useless one-file pseudo-groups.
+      const looseSamples: CacheSampleEntry[] = [];
+      const groups: SetSampleGroup[] = [];
+
+      for (const [base, groupSamples] of groupsByBase.entries()) {
+        const sortedGroupSamples = [...groupSamples].sort(sortSamples);
+        const isVariantGroup = sortedGroupSamples.length >= 2 && sortedGroupSamples.some((sample) => sample.note);
+        if (!isVariantGroup) {
+          looseSamples.push(...sortedGroupSamples);
+          continue;
+        }
+        groups.push({
+          id: `${folderId}:${base}`,
+          label: base,
+          folderId,
+          samples: sortedGroupSamples,
+          sampleCount: sortedGroupSamples.length,
+          unnamedCount: sortedGroupSamples.filter((sample) => sample.isUnnamed).length,
+          noteSummary: noteSummary(sortedGroupSamples),
+        });
+      }
+
+      groups.sort((a, b) => a.label.localeCompare(b.label));
+
+      if (looseSamples.length > 0) {
+        const sortedLoose = looseSamples.sort(sortSamples);
+        groups.push({
+          id: `${folderId}:__loose`,
+          label: 'loose files',
+          folderId,
+          samples: sortedLoose,
+          sampleCount: sortedLoose.length,
+          unnamedCount: sortedLoose.filter((sample) => sample.isUnnamed).length,
+          noteSummary: `${sortedLoose.length} files`,
+        });
+      }
 
       return {
         id: folderId,

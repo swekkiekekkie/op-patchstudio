@@ -24,7 +24,10 @@ export function SetSamplesToolbar({ busy, unnamedCount, onRefresh }: SetSamplesT
         </ActionButton>
       </div>
       <div className="samples-toolbar-right">
-        <ActionButton label="rename" ariaLabel="rename queue" disabled={unnamedCount === 0}>
+        {unnamedCount > 0 ? (
+          <span className="mono samples-toolbar-note">{unnamedCount} rename · queue planned</span>
+        ) : null}
+        <ActionButton label="rename" ariaLabel="rename queue (planned)" title="rename queue planned" disabled>
           <RenameIcon />
         </ActionButton>
       </div>

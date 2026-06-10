@@ -685,7 +685,9 @@ export function SamplesMode({
             <>
               <ObjectDetailHead
                 title={selected.base}
-                meta={`${selectedSetFolder?.label ?? 'set'} · ${selected.note} · ${selected.idx}`}
+                meta={[selectedSetFolder?.label ?? 'set', selected.note ? `${selected.note} · ${selected.idx}` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
                 position={selectedIndex >= 0 ? `${selectedIndex + 1}/${visibleSetSamples.length}` : undefined}
                 onPrev={() => prevSample && goToSamples(prevSample.filename)}
                 onNext={() => nextSample && goToSamples(nextSample.filename)}
@@ -700,7 +702,7 @@ export function SamplesMode({
                   </div>
                   <div>
                     <span className="mono">variants</span>
-                    <strong>{selectedSetGroup?.noteSummary ?? selected.note}</strong>
+                    <strong>{selectedSetGroup?.noteSummary ?? selected.note ?? '—'}</strong>
                   </div>
                   <div>
                     <span className="mono">state</span>
@@ -727,7 +729,7 @@ export function SamplesMode({
                   </div>
                   <div className="sample-inspector-row">
                     <span>suffix</span>
-                    <span className="mono">{selected.note} · {selected.idx}</span>
+                    <span className="mono">{selected.note ? `${selected.note} · ${selected.idx}` : 'no note suffix'}</span>
                   </div>
                   <div className="sample-inspector-row">
                     <span>rename</span>

@@ -9,10 +9,47 @@ import {
   HistoryIcon,
   InventoryPanel,
   ListIcon,
+  NewSetIcon,
   PushIcon,
   PullIcon,
   SaveAsIcon,
 } from './dataParts';
+
+function NewSetSlab({ library }: { library: SetLibrary }) {
+  const [name, setName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const submit = () => library.createSet(name);
+
+  return (
+    <div className="new-set-slab slab">
+      <h3>new set</h3>
+      <input
+        ref={inputRef}
+        type="text"
+        value={name}
+        placeholder="set name"
+        aria-label="new set name"
+        onChange={(event) => setName(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') submit();
+          if (event.key === 'Escape') library.setNewSetOpen(false);
+        }}
+      />
+      <p className="mono">starts empty · pull or copy to fill</p>
+      <div className="slab-actions">
+        <button type="button" onClick={() => library.setNewSetOpen(false)}>cancel</button>
+        <button type="button" className="primary" disabled={!name.trim()} onClick={submit}>
+          create
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface SetsPaneProps {
   sync: SyncCockpit;
@@ -125,6 +162,16 @@ export function SetsPane({ library }: SetsPaneProps) {
             </div>
           </div>
           <div className="sets-toolbar-right">
+            <div className="sets-picker-wrap">
+              {library.newSetOpen ? <NewSetSlab library={library} /> : null}
+              <DataButton
+                label="new"
+                active={library.newSetOpen}
+                onClick={() => library.setNewSetOpen(!library.newSetOpen)}
+              >
+                <NewSetIcon />
+              </DataButton>
+            </div>
             <DataButton label="commit" onClick={library.commit}>
               <CommitIcon />
             </DataButton>

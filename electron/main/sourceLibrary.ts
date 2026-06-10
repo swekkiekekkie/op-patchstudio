@@ -10,7 +10,7 @@ import type {
   SourceSampleCopyResult,
   SourceSampleEntry,
 } from '../../src/types/opxy';
-import { listPresets, listStandaloneSamples } from './cache';
+import { isJunkFilename, listPresets, listStandaloneSamples } from './cache';
 
 const AUDIO_RE = /\.(wav|aif|aiff|mp3|flac|ogg)$/i;
 
@@ -210,6 +210,7 @@ export function scanSourceFolders(userDataRoot: string, cacheRoot: string): Sour
       while (stack.length > 0) {
         const current = stack.pop()!;
         for (const name of fs.readdirSync(current)) {
+          if (isJunkFilename(name)) continue;
           const full = path.join(current, name);
           const stat = fs.statSync(full);
           if (stat.isDirectory()) {

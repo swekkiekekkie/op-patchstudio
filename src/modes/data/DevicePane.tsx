@@ -6,6 +6,13 @@ interface DevicePaneProps {
   sync: SyncCockpit;
 }
 
+/** UX-10: offline/error states are one short sentence, never a raw payload. */
+function shortDeviceError(error: string): string {
+  const salvaged = error.match(/"error"\s*:\s*"([^"]+)/)?.[1];
+  const text = (salvaged ?? error).replace(/\s+/g, ' ').trim().toLowerCase();
+  return text.length > 80 ? `${text.slice(0, 77)}…` : text;
+}
+
 export function DevicePane({ sync }: DevicePaneProps) {
   const offline = !sync.connected;
   const showLive = sync.connected;
@@ -28,7 +35,12 @@ export function DevicePane({ sync }: DevicePaneProps) {
               rows={[
                 ['source', sync.deviceName ?? 'op-xy over mtp'],
                 ['sizes', 'unavailable over mtp'],
-                ['last pull', sync.lastPullAt ?? 'not pulled this session'],
+                [
+                  'last pull',
+                  sync.lastPullAt
+                    ? new Date(sync.lastPullAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : 'not pulled this session',
+                ],
               ]}
             />
           </div>
@@ -37,7 +49,7 @@ export function DevicePane({ sync }: DevicePaneProps) {
           <ConnectPcArt />
           <p className="device-offline-hint">connect op–xy over usb</p>
           {sync.status?.error && offline ? (
-            <p className="device-offline-hint" style={{ opacity: 0.35 }}>{sync.status.error}</p>
+            <p className="device-offline-hint" style={{ opacity: 0.35 }}>{shortDeviceError(sync.status.error)}</p>
           ) : null}
         </div>
       </div>

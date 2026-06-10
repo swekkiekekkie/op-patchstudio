@@ -56,11 +56,17 @@
   flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: calc(var(--grid, 8px) * 2);
   margin-bottom: calc(var(--grid, 8px) * 2);
 
   .segments { margin-bottom: 0; }
+}
+
+/* toolbar rendered inside a list pane needs its own inset */
+.library-list-pane > .library-toolbar {
+  padding: calc(var(--grid, 8px) * 2) calc(var(--grid, 8px) * 2) 0;
+  margin-bottom: calc(var(--grid, 8px) * 1);
 }
 
 .filter-toggles {
@@ -139,6 +145,13 @@
 
 .samples-toolbar-right {
   margin-left: auto;
+}
+
+.samples-toolbar-note {
+  align-self: center;
+  font-size: 10px;
+  opacity: 0.48;
+  text-transform: lowercase;
 }
 
 .source-detail-summary {

@@ -26,20 +26,40 @@ describe('setSampleHierarchy', () => {
 
     expect(hierarchy.folders.map((folder) => folder.label)).toEqual(['samples / imports', 'samples / user']);
     const userFolder = hierarchy.folders.find((folder) => folder.path === 'samples/user');
-    expect(userFolder?.groups.map((group) => group.label)).toEqual(['kit-a', 'kit-b']);
+    expect(userFolder?.groups.map((group) => group.label)).toEqual(['kit-a', 'loose files']);
     expect(userFolder?.groups[0]?.sampleCount).toBe(2);
     expect(userFolder?.groups[0]?.unnamedCount).toBe(1);
+  });
+
+  it('collapses singletons and unparsed filenames into one loose group', () => {
+    const hierarchy = buildSetSampleHierarchy([
+      sample('samples/user/WT_FXLoopB_126-02.wav', { base: 'WT_FXLoopB_126-02', note: '', idx: 0 }),
+      sample('samples/user/one-shot-c3-0.wav', { base: 'one-shot', note: 'c3', idx: 0 }),
+      sample('samples/user/kit-a-c3-0.wav', { base: 'kit-a', note: 'c3', idx: 0 }),
+      sample('samples/user/kit-a-d3-0.wav', { base: 'kit-a', note: 'd3', idx: 0 }),
+    ]);
+
+    const userFolder = hierarchy.folders[0];
+    expect(userFolder?.groups.map((group) => group.label)).toEqual(['kit-a', 'loose files']);
+    const loose = userFolder?.groups.find((group) => group.label === 'loose files');
+    expect(loose?.sampleCount).toBe(2);
+    expect(loose?.noteSummary).toBe('2 files');
   });
 
   it('finds the folder and group for a selected set sample', () => {
     const hierarchy = buildSetSampleHierarchy([
       sample('samples/user/kit-a-c3-0.wav', { base: 'kit-a' }),
+      sample('samples/user/kit-a-d3-0.wav', { base: 'kit-a' }),
       sample('samples/user/kit-b-c3-0.wav', { base: 'kit-b' }),
     ]);
 
+    expect(findSetSampleHierarchySelection(hierarchy, 'samples/user/kit-a-d3-0.wav')).toEqual({
+      folderId: 'samples/user',
+      groupId: 'samples/user:kit-a',
+    });
     expect(findSetSampleHierarchySelection(hierarchy, 'samples/user/kit-b-c3-0.wav')).toEqual({
       folderId: 'samples/user',
-      groupId: 'samples/user:kit-b',
+      groupId: 'samples/user:__loose',
     });
   });
 });

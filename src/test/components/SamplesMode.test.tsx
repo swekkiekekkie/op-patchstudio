@@ -92,12 +92,12 @@ describe('SamplesMode', () => {
 
     expect(screen.getByLabelText('set sample folders')).toHaveTextContent('samples / user');
     expect(screen.getByLabelText('set sample groups')).toHaveTextContent('kit-a');
-    expect(screen.getByLabelText('set sample groups')).toHaveTextContent('kit-b');
+    expect(screen.getByLabelText('set sample groups')).toHaveTextContent('loose files');
     expect(screen.getByLabelText('set sample files')).toHaveTextContent('kit-a-c3-0.wav');
     expect(screen.getByLabelText('set sample files')).toHaveTextContent('kit-a-c3-1.wav');
     expect(screen.getByLabelText('set sample files')).not.toHaveTextContent('kit-b-d3-0.wav');
 
-    fireEvent.click(within(screen.getByLabelText('set sample groups')).getByText('kit-b'));
+    fireEvent.click(within(screen.getByLabelText('set sample groups')).getByText('loose files'));
 
     expect(screen.getByLabelText('set sample files')).toHaveTextContent('kit-b-d3-0.wav');
     expect(screen.getByLabelText('set sample files')).not.toHaveTextContent('kit-a-c3-0.wav');

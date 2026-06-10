@@ -10,6 +10,7 @@ export function useSetLibrary(sync: SyncCockpit) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pushSlabOpen, setPushSlabOpen] = useState(false);
+  const [newSetOpen, setNewSetOpen] = useState(false);
   const [sets, setSets] = useState<SetSummary[]>(() => MOCK_SETS.map((set) => ({ ...set })));
 
   useEffect(() => {
@@ -55,6 +56,22 @@ export function useSetLibrary(sync: SyncCockpit) {
     );
   }, [setIndex]);
 
+  const createSet = useCallback((name: string) => {
+    const trimmed = name.trim().toLowerCase();
+    if (!trimmed) return;
+    const created: SetSummary = {
+      id: `set-${Date.now()}`,
+      name: trimmed,
+      usage: { presets: 0, samples: 0, projects: 0, other: 0 },
+      stats: { presets: 0, samples: 0, projects: 0 },
+      commits: ['created', 'current'],
+      lastPushedToDevice: false,
+    };
+    setSets((prev) => [...prev, created]);
+    setSetIndex(sets.length);
+    setNewSetOpen(false);
+  }, [sets.length]);
+
   const saveAs = useCallback(() => {
     const source = sets[setIndex]!;
     const copy: SetSummary = {
@@ -76,13 +93,16 @@ export function useSetLibrary(sync: SyncCockpit) {
     historyOpen,
     pickerOpen,
     pushSlabOpen,
+    newSetOpen,
     selectSet,
     prevSet,
     nextSet,
     setHistoryOpen,
     setPickerOpen,
     setPushSlabOpen,
+    setNewSetOpen,
     commit,
+    createSet,
     saveAs,
   };
 }
